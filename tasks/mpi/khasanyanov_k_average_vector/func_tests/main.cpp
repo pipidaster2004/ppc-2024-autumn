@@ -3,6 +3,7 @@
 
 #include "mpi/khasanyanov_k_average_vector/include/avg_mpi.hpp"
 
+//=========================================sequence=========================================
 
 TEST(khasanyanov_k_average_vector_seq, test_int) {
   std::vector<int32_t> in(3333, 77);
@@ -20,7 +21,6 @@ TEST(khasanyanov_k_average_vector_seq, test_int) {
   testTask.pre_processing();
   testTask.run();
   testTask.post_processing();
-  std::cout << out[0] << std::endl;
   EXPECT_NEAR(out[0], 77.0, 1e-5);
 }
 
@@ -79,4 +79,49 @@ TEST(khasanyanov_k_average_vector_seq, test_uint) {
   testTask.run();
   testTask.post_processing();
   EXPECT_NEAR(out[0], 3, 1e-5);
+}
+
+//=========================================parallel=========================================
+
+namespace mpi = boost::mpi;
+
+TEST(khasanyanov_k_average_vector_mpi, test_float) {
+  mpi::communicator world;
+  std::vector<float> in(1200, 3.3);
+  std::vector<double> out(1, 0.0);
+
+  std::shared_ptr<ppc::core::TaskData> taskData = std::make_shared<ppc::core::TaskData>();
+  if (world.rank() == 0) {
+    taskData->inputs.emplace_back(reinterpret_cast<uint8_t*>(in.data()));
+    taskData->inputs_count.emplace_back(in.size());
+    taskData->outputs.emplace_back(reinterpret_cast<uint8_t*>(out.data()));
+    taskData->outputs_count.emplace_back(out.size());
+  }
+
+  khasanyanov_k_average_vector_mpi::AvgVectorMPITaskParallel<float, double> testTask(taskData);
+  bool isValid = testTask.validation();
+  ASSERT_TRUE(isValid);
+  testTask.pre_processing();
+  testTask.run();
+  testTask.post_processing();
+
+  if (world.rank() == 0) {
+    std::vector<double> seq_out(1, 0);
+
+    std::shared_ptr<ppc::core::TaskData> taskDataSeq = std::make_shared<ppc::core::TaskData>();
+    taskDataSeq->inputs.emplace_back(reinterpret_cast<uint8_t*>(in.data()));
+    taskDataSeq->inputs_count.emplace_back(in.size());
+    taskDataSeq->outputs.emplace_back(reinterpret_cast<uint8_t*>(seq_out.data()));
+    taskDataSeq->outputs_count.emplace_back(seq_out.size());
+
+    khasanyanov_k_average_vector_mpi::AvgVectorMPITaskSequential<float, double> testMpiTaskSequential(taskDataSeq);
+    ASSERT_EQ(testMpiTaskSequential.validation(), true);
+    testMpiTaskSequential.pre_processing();
+    testMpiTaskSequential.run();
+    testMpiTaskSequential.post_processing();
+
+    ASSERT_EQ(seq_out[0], out[0]);
+  }
+
+  // EXPECT_NEAR(out[0], 3.3, 1e-5);
 }
