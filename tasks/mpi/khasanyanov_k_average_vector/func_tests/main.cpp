@@ -42,7 +42,7 @@ TEST(khasanyanov_k_average_vector_seq, test_double) {
 }
 
 TEST(khasanyanov_k_average_vector_seq, test_float) {
-  std::vector<float> in(3333, 7.7);
+  std::vector<float> in(3333, 7.7f);
   std::vector<double> out(1, 0.0);
 
   std::shared_ptr<ppc::core::TaskData> taskData =
@@ -86,7 +86,7 @@ namespace mpi = boost::mpi;
 
 TEST(khasanyanov_k_average_vector_mpi, test_float) {
   mpi::communicator world;
-  std::vector<float> in(1234, 3.3);
+  std::vector<float> in(1234, 3.3f);
   std::vector<double> out(1, 0.0);
 
   std::shared_ptr<ppc::core::TaskData> taskData = std::make_shared<ppc::core::TaskData>();
