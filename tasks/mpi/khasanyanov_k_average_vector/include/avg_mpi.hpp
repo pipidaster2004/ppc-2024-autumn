@@ -14,6 +14,15 @@
 
 #include "core/task/include/task.hpp"
 
+#ifndef RUN_TASK
+#define RUN_TASK(task)                \
+  {                                   \
+    ASSERT_TRUE((task).validation()); \
+    (task).pre_processing();          \
+    (task).run();                     \
+    (task).post_processing();         \
+  }
+#endif
 namespace khasanyanov_k_average_vector_mpi {
 
 template <class T = double>
@@ -25,6 +34,16 @@ std::vector<T> get_random_vector(size_t size) {
     vec[i] = gen() % 1000 + gen() / 100.0;
   }
   return vec;
+}
+
+template <class InType, class OutType>
+std::shared_ptr<ppc::core::TaskData> create_task_data(std::vector<InType>& in, std::vector<OutType>& out) {
+  auto taskData = std::make_shared<ppc::core::TaskData>();
+  taskData->inputs.emplace_back(reinterpret_cast<uint8_t*>(in.data()));
+  taskData->inputs_count.emplace_back(in.size());
+  taskData->outputs.emplace_back(reinterpret_cast<uint8_t*>(out.data()));
+  taskData->outputs_count.emplace_back(out.size());
+  return taskData;
 }
 
 //=========================================sequential=========================================

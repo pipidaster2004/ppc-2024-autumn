@@ -12,19 +12,13 @@ TEST(khasanyanov_k_average_vector_seq, test_pipeline_run) {
   std::vector<int> global_vec(2212000, 4);
   std::vector<double> average(1, 0.0);
 
-  std::shared_ptr<ppc::core::TaskData> taskData = std::make_shared<ppc::core::TaskData>();
-
-  taskData->inputs.emplace_back(reinterpret_cast<uint8_t*>(global_vec.data()));
-  taskData->inputs_count.emplace_back(global_vec.size());
-  taskData->outputs.emplace_back(reinterpret_cast<uint8_t*>(average.data()));
-  taskData->outputs_count.emplace_back(average.size());
+  std::shared_ptr<ppc::core::TaskData> taskData =
+      khasanyanov_k_average_vector_mpi::create_task_data<int, double>(global_vec, average);
 
   auto testAvgVectorSequence =
       std::make_shared<khasanyanov_k_average_vector_mpi::AvgVectorMPITaskSequential<int, double>>(taskData);
-  ASSERT_TRUE(testAvgVectorSequence->validation());
-  testAvgVectorSequence->pre_processing();
-  testAvgVectorSequence->run();
-  testAvgVectorSequence->post_processing();
+
+  RUN_TASK(*testAvgVectorSequence);
 
   auto perfAttr = std::make_shared<ppc::core::PerfAttr>();
   perfAttr->num_running = 1;
@@ -36,26 +30,20 @@ TEST(khasanyanov_k_average_vector_seq, test_pipeline_run) {
   auto perfAnalyzer = std::make_shared<ppc::core::Perf>(testAvgVectorSequence);
   perfAnalyzer->pipeline_run(perfAttr, perfResults);
   ppc::core::Perf::print_perf_statistic(perfResults);
-  ASSERT_EQ(4, average[0]);
+  EXPECT_NEAR(4, average[0], 1e-5);
 }
 
 TEST(khasanyanov_k_average_vector_seq, test_task_run) {
   std::vector<int> global_vec(3050000, 4);
   std::vector<double> average(1, 0.0);
 
-  std::shared_ptr<ppc::core::TaskData> taskData = std::make_shared<ppc::core::TaskData>();
-
-  taskData->inputs.emplace_back(reinterpret_cast<uint8_t*>(global_vec.data()));
-  taskData->inputs_count.emplace_back(global_vec.size());
-  taskData->outputs.emplace_back(reinterpret_cast<uint8_t*>(average.data()));
-  taskData->outputs_count.emplace_back(average.size());
+  std::shared_ptr<ppc::core::TaskData> taskData =
+      khasanyanov_k_average_vector_mpi::create_task_data<int, double>(global_vec, average);
 
   auto testAvgVectorSequence =
       std::make_shared<khasanyanov_k_average_vector_mpi::AvgVectorMPITaskSequential<int, double>>(taskData);
-  ASSERT_TRUE(testAvgVectorSequence->validation());
-  testAvgVectorSequence->pre_processing();
-  testAvgVectorSequence->run();
-  testAvgVectorSequence->post_processing();
+
+  RUN_TASK(*testAvgVectorSequence);
 
   auto perfAttr = std::make_shared<ppc::core::PerfAttr>();
   perfAttr->num_running = 1;
@@ -67,7 +55,7 @@ TEST(khasanyanov_k_average_vector_seq, test_task_run) {
   auto perfAnalyzer = std::make_shared<ppc::core::Perf>(testAvgVectorSequence);
   perfAnalyzer->task_run(perfAttr, perfResults);
   ppc::core::Perf::print_perf_statistic(perfResults);
-  ASSERT_EQ(4, average[0]);
+  EXPECT_NEAR(4, average[0], 1e-5);
 }
 
 //=========================================parallel=========================================
@@ -75,25 +63,20 @@ TEST(khasanyanov_k_average_vector_seq, test_task_run) {
 TEST(khasanyanov_k_average_vector_mpi, test_pipeline_run) {
   boost::mpi::communicator world;
   std::vector<double> global_vec;
-  std::vector<double> global_sum(1, 0);
+  std::vector<double> average(1, 0);
 
   std::shared_ptr<ppc::core::TaskData> taskDataPar = std::make_shared<ppc::core::TaskData>();
   int count_size_vector;
   if (world.rank() == 0) {
     count_size_vector = 3050000;
     global_vec = std::vector<double>(count_size_vector, 4);
-    taskDataPar->inputs.emplace_back(reinterpret_cast<uint8_t*>(global_vec.data()));
-    taskDataPar->inputs_count.emplace_back(global_vec.size());
-    taskDataPar->outputs.emplace_back(reinterpret_cast<uint8_t*>(global_sum.data()));
-    taskDataPar->outputs_count.emplace_back(global_sum.size());
+    taskDataPar = khasanyanov_k_average_vector_mpi::create_task_data<double, double>(global_vec, average);
   }
 
   auto testMpiTaskParallel =
       std::make_shared<khasanyanov_k_average_vector_mpi::AvgVectorMPITaskParallel<double, double>>(taskDataPar);
-  ASSERT_EQ(testMpiTaskParallel->validation(), true);
-  testMpiTaskParallel->pre_processing();
-  testMpiTaskParallel->run();
-  testMpiTaskParallel->post_processing();
+
+  RUN_TASK(*testMpiTaskParallel);
 
   auto perfAttr = std::make_shared<ppc::core::PerfAttr>();
   perfAttr->num_running = 10;
@@ -106,32 +89,27 @@ TEST(khasanyanov_k_average_vector_mpi, test_pipeline_run) {
   perfAnalyzer->pipeline_run(perfAttr, perfResults);
   if (world.rank() == 0) {
     ppc::core::Perf::print_perf_statistic(perfResults);
-    ASSERT_EQ(4, global_sum[0]);
+    EXPECT_NEAR(4, average[0], 1e-5);
   }
 }
 
 TEST(khasanyanov_k_average_vector_mpi, test_task_run) {
   boost::mpi::communicator world;
   std::vector<double> global_vec;
-  std::vector<double> global_sum(1, 0.0);
+  std::vector<double> average(1, 0.0);
 
   std::shared_ptr<ppc::core::TaskData> taskDataPar = std::make_shared<ppc::core::TaskData>();
   int count_size_vector;
   if (world.rank() == 0) {
     count_size_vector = 3050000;
     global_vec = std::vector<double>(count_size_vector, 4);
-    taskDataPar->inputs.emplace_back(reinterpret_cast<uint8_t*>(global_vec.data()));
-    taskDataPar->inputs_count.emplace_back(global_vec.size());
-    taskDataPar->outputs.emplace_back(reinterpret_cast<uint8_t*>(global_sum.data()));
-    taskDataPar->outputs_count.emplace_back(global_sum.size());
+    taskDataPar = khasanyanov_k_average_vector_mpi::create_task_data<double, double>(global_vec, average);
   }
 
   auto testMpiTaskParallel =
       std::make_shared<khasanyanov_k_average_vector_mpi::AvgVectorMPITaskParallel<double, double>>(taskDataPar);
-  ASSERT_EQ(testMpiTaskParallel->validation(), true);
-  testMpiTaskParallel->pre_processing();
-  testMpiTaskParallel->run();
-  testMpiTaskParallel->post_processing();
+
+  RUN_TASK(*testMpiTaskParallel);
 
   auto perfAttr = std::make_shared<ppc::core::PerfAttr>();
   perfAttr->num_running = 10;
@@ -144,6 +122,6 @@ TEST(khasanyanov_k_average_vector_mpi, test_task_run) {
   perfAnalyzer->task_run(perfAttr, perfResults);
   if (world.rank() == 0) {
     ppc::core::Perf::print_perf_statistic(perfResults);
-    ASSERT_EQ(4, global_sum[0]);
+    ASSERT_NEAR(4, average[0], 1e-5);
   }
 }
