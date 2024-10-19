@@ -1,4 +1,5 @@
 #include <iostream>
+#include <numeric>
 #include <vector>
 
 #include "mpi/khasanyanov_k_average_vector/include/avg_mpi.hpp"
@@ -62,6 +63,27 @@ TEST(khasanyanov_k_average_vector_seq, test_float) {
   EXPECT_NEAR(out[0], 7.7, 1e-5);
 }
 
+TEST(khasanyanov_k_average_vector_seq, test_random) {
+  std::vector<float> in = khasanyanov_k_average_vector_mpi::get_random_vector<float>(15);
+  std::vector<double> out(1, 0.0);
+
+  std::shared_ptr<ppc::core::TaskData> taskData = std::make_shared<ppc::core::TaskData>();
+  taskData->inputs.emplace_back(reinterpret_cast<uint8_t*>(in.data()));
+  taskData->inputs_count.emplace_back(in.size());
+  taskData->outputs.emplace_back(reinterpret_cast<uint8_t*>(out.data()));
+  taskData->outputs_count.emplace_back(out.size());
+
+  khasanyanov_k_average_vector_mpi::AvgVectorMPITaskSequential<float, double> testTask(taskData);
+  // bool isValid;
+  ASSERT_TRUE(testTask.validation());
+  testTask.pre_processing();
+  testTask.run();
+  testTask.post_processing();
+
+  double expect_res = std::accumulate(in.begin(), in.end(), 0.0, std::plus()) / in.size();
+  EXPECT_NEAR(out[0], expect_res, 1e-5);
+}
+
 TEST(khasanyanov_k_average_vector_seq, test_uint) {
   std::vector<std::uint8_t> in(1200, 3);
   std::vector<double> out(1, 0.0);
@@ -87,7 +109,7 @@ namespace mpi = boost::mpi;
 
 TEST(khasanyanov_k_average_vector_mpi, test_float) {
   mpi::communicator world;
-  std::vector<float> in(1200, 3.3);
+  std::vector<float> in(1234, 3.3);
   std::vector<double> out(1, 0.0);
 
   std::shared_ptr<ppc::core::TaskData> taskData = std::make_shared<ppc::core::TaskData>();
@@ -122,6 +144,4 @@ TEST(khasanyanov_k_average_vector_mpi, test_float) {
 
     ASSERT_EQ(seq_out[0], out[0]);
   }
-
-  // EXPECT_NEAR(out[0], 3.3, 1e-5);
 }

@@ -8,6 +8,7 @@
 #include <iterator>
 #include <memory>
 #include <numeric>
+#include <random>
 #include <utility>
 #include <vector>
 
@@ -15,7 +16,16 @@
 
 namespace khasanyanov_k_average_vector_mpi {
 
-std::vector<int> getRandomVector(int size);
+template <class T = double>
+std::vector<T> get_random_vector(size_t size) {
+  std::random_device dev;
+  std::mt19937 gen(dev());
+  std::vector<T> vec(size);
+  for (size_t i = 0; i < size; i++) {
+    vec[i] = gen() % 1000 + gen() / 100.0;
+  }
+  return vec;
+}
 
 //=========================================sequential=========================================
 
@@ -35,7 +45,7 @@ class AvgVectorMPITaskSequential : public ppc::core::Task {
 template <class In, class Out>
 bool khasanyanov_k_average_vector_mpi::AvgVectorMPITaskSequential<In, Out>::validation() {
   internal_order_test();
-  return taskData->outputs_count[0] == 1;
+  return taskData->outputs_count[0] == 1 && taskData->inputs_count[0] > 0;
 }
 
 template <class In, class Out>
@@ -73,6 +83,8 @@ class AvgVectorMPITaskParallel : public ppc::core::Task {
   Out avg = 0.0;
   mpi::communicator world;
 
+  std::pair<std::vector<int>, std::vector<int>> displacement(size_t input_size) const;
+
  public:
   explicit AvgVectorMPITaskParallel(std::shared_ptr<ppc::core::TaskData> taskData_) : Task(std::move(taskData_)) {}
   bool pre_processing() override;
@@ -85,7 +97,7 @@ template <class In, class Out>
 bool khasanyanov_k_average_vector_mpi::AvgVectorMPITaskParallel<In, Out>::validation() {
   internal_order_test();
   if (world.rank() == 0) {
-    return taskData->outputs_count[0] == 1;
+    return taskData->outputs_count[0] == 1 && taskData->inputs_count[0] > 0;
   }
   return true;
 }
@@ -94,30 +106,31 @@ template <class In, class Out>
 bool khasanyanov_k_average_vector_mpi::AvgVectorMPITaskParallel<In, Out>::pre_processing() {
   internal_order_test();
   size_t part;
+  size_t input_size;
   if (world.rank() == 0) {
     part = taskData->inputs_count[0] / world.size();
+    input_size = taskData->inputs_count[0];
   }
   mpi::broadcast(world, part, 0);
+  mpi::broadcast(world, input_size, 0);
 
+  std::pair<std::vector<int>, std::vector<int>> disp = displacement(input_size);
+  auto& displacements = disp.second;
+  auto& sizes = disp.first;
   if (world.rank() == 0) {
     input_ = std::vector<In>(taskData->inputs_count[0]);
     auto* tmp = reinterpret_cast<In*>(taskData->inputs[0]);
-    for (size_t i = 0; i < taskData->inputs_count[0]; ++i) {
-      input_[i] = tmp[i];
-    }
-    // std::copy(tmp, tmp + taskData->inputs_count[0], std::back_inserter(input_));
-    for (int num = 1; num < world.size(); ++num) {
-      world.send(num, 0, input_.data() + num * part, part);
-    }
-  }
 
-  local_input_ = std::vector<In>(part);
-  if (world.rank() == 0) {
-    local_input_ = std::vector<In>(input_.begin(), input_.begin() + part);
+    input_.clear();
+    std::copy(tmp, tmp + taskData->inputs_count[0], std::back_inserter(input_));
+
+    local_input_.resize(sizes[0]);
+    mpi::scatterv(world, input_, sizes, displacements, local_input_.data(), sizes[0], 0);
+
   } else {
-    world.recv(0, 0, local_input_.data(), part);
+    local_input_.resize(sizes[world.rank()]);
+    mpi::scatterv(world, local_input_.data(), sizes[world.rank()], 0);
   }
-
   avg = 0.0;
   return true;
 }
@@ -141,6 +154,24 @@ bool khasanyanov_k_average_vector_mpi::AvgVectorMPITaskParallel<In, Out>::post_p
     reinterpret_cast<Out*>(taskData->outputs[0])[0] = avg;
   }
   return true;
+}
+
+template <class In, class Out>
+std::pair<std::vector<int>, std::vector<int>>
+khasanyanov_k_average_vector_mpi::AvgVectorMPITaskParallel<In, Out>::displacement(size_t input_size) const {
+  const size_t capacity = world.size();
+  size_t count = input_size / capacity;
+  size_t mod = input_size % capacity;
+  std::vector<int> sizes(capacity, count);
+  std::vector<int> disp(capacity);
+  for (size_t i = 0; i < mod; ++i) {
+    ++sizes[i];
+  }
+  disp[0] = 0;
+  for (size_t i = 1; i < capacity; ++i) {
+    disp[i] = disp[i - 1] + sizes[i - 1];
+  }
+  return {sizes, disp};
 }
 
 }  //  namespace khasanyanov_k_average_vector_mpi
