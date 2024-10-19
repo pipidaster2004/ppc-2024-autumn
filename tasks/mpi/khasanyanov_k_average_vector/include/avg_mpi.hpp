@@ -15,7 +15,6 @@
 
 #include "core/task/include/task.hpp"
 
-
 #ifndef RUN_TASK
 #define RUN_TASK(task)                \
   {                                   \
@@ -27,7 +26,7 @@
 #endif
 namespace khasanyanov_k_average_vector_mpi {
 
-template <class T = double>
+template <class T>
 std::vector<T> get_random_vector(size_t size) {
   std::random_device dev;
   std::mt19937 gen(dev());

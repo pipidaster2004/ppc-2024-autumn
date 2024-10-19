@@ -55,13 +55,13 @@ TEST(khasanyanov_k_average_vector_seq, test_float) {
 }
 
 TEST(khasanyanov_k_average_vector_seq, test_random) {
-  std::vector<float> in = khasanyanov_k_average_vector_mpi::get_random_vector<float>(15);
+  std::vector<double> in = khasanyanov_k_average_vector_mpi::get_random_vector<double>(15);
   std::vector<double> out(1, 0.0);
 
   std::shared_ptr<ppc::core::TaskData> taskData =
-      khasanyanov_k_average_vector_mpi::create_task_data<float, double>(in, out);
+      khasanyanov_k_average_vector_mpi::create_task_data<double, double>(in, out);
 
-  khasanyanov_k_average_vector_mpi::AvgVectorMPITaskSequential<float, double> testTask(taskData);
+  khasanyanov_k_average_vector_mpi::AvgVectorMPITaskSequential<double, double> testTask(taskData);
   RUN_TASK(testTask);
 
   double expect_res = std::accumulate(in.begin(), in.end(), 0.0, std::plus()) / in.size();
