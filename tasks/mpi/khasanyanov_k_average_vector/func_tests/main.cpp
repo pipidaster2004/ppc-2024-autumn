@@ -11,7 +11,7 @@
 
 #define FUNC_SEQ_TEST(InType, OutType, Size, Value)                                                   \
                                                                                                       \
-  TEST(khasanyanov_k_average_vector_seq, test_##InType) {                                             \
+  TEST(khasanyanov_k_average_vector_seq, test_seq_##InType##_##Size) {                                \
     std::vector<InType> in(Size, static_cast<InType>(Value));                                         \
     std::vector<OutType> out(1, 0.0);                                                                 \
     std::shared_ptr<ppc::core::TaskData> taskData =                                                   \
@@ -52,7 +52,7 @@ TEST(khasanyanov_k_average_vector_seq, test_random) {
 namespace mpi = boost::mpi;
 
 #define FUNC_MPI_TEST(InType, OutType, Size)                                                               \
-  TEST(khasanyanov_k_average_vector_mpi, test_##InType) {                                                  \
+  TEST(khasanyanov_k_average_vector_mpi, test_mpi_##InType##_##Size) {                                     \
     mpi::communicator world;                                                                               \
     std::vector<InType> in = khasanyanov_k_average_vector_mpi::get_random_vector<InType>(Size);            \
     std::vector<OutType> out(1, 0.0);                                                                      \
@@ -93,4 +93,11 @@ namespace mpi = boost::mpi;
   RUN_FUNC_SEQ_TESTS(Size, Value)   \
   RUN_FUNC_MPI_TESTS(Size)
 
-RUN_FUNC_TESTS(1234, 7.7)
+#define RUN_ALL_FUNC_TESTS() \
+  RUN_FUNC_TESTS(1234, 7.7)  \
+  RUN_FUNC_TESTS(2000, 10)   \
+  RUN_FUNC_TESTS(9, 77)      \
+  RUN_FUNC_TESTS(3011, 111)
+
+//=======run=============
+RUN_ALL_FUNC_TESTS()
