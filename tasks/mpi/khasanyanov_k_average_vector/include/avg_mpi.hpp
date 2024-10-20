@@ -16,13 +16,12 @@
 #include "core/task/include/task.hpp"
 
 #ifndef RUN_TASK
-#define RUN_TASK(task)                \
-  {                                   \
-    ASSERT_TRUE((task).validation()); \
-    (task).pre_processing();          \
-    (task).run();                     \
-    (task).post_processing();         \
-  }
+#define RUN_TASK(task)              \
+  ASSERT_TRUE((task).validation()); \
+  (task).pre_processing();          \
+  (task).run();                     \
+  (task).post_processing();
+
 #endif
 namespace khasanyanov_k_average_vector_mpi {
 
@@ -32,7 +31,7 @@ std::vector<T> get_random_vector(size_t size) {
   std::mt19937 gen(dev());
   std::vector<T> vec(size);
   for (size_t i = 0; i < size; i++) {
-    vec[i] = gen() % 1000 + gen() / 100.0;
+    vec[i] = static_cast<T>(gen() % 1000 + (gen() % 100) / 100.0);
   }
   return vec;
 }
@@ -125,13 +124,11 @@ bool khasanyanov_k_average_vector_mpi::AvgVectorMPITaskParallel<In, Out>::valida
 template <class In, class Out>
 bool khasanyanov_k_average_vector_mpi::AvgVectorMPITaskParallel<In, Out>::pre_processing() {
   internal_order_test();
-  size_t part;
   size_t input_size;
   if (world.rank() == 0) {
-    part = taskData->inputs_count[0] / world.size();
     input_size = taskData->inputs_count[0];
   }
-  mpi::broadcast(world, part, 0);
+
   mpi::broadcast(world, input_size, 0);
 
   std::pair<std::vector<int>, std::vector<int>> disp = displacement(input_size);
@@ -155,14 +152,12 @@ bool khasanyanov_k_average_vector_mpi::AvgVectorMPITaskParallel<In, Out>::pre_pr
   return true;
 }
 
-// using namespace std::chrono_literals;
 template <class In, class Out>
 bool khasanyanov_k_average_vector_mpi::AvgVectorMPITaskParallel<In, Out>::run() {
   internal_order_test();
-  Out local_avg{};
-  local_avg = static_cast<Out>(std::accumulate(local_input_.begin(), local_input_.end(), 0.0, std::plus()));
-  local_avg /= static_cast<Out>(local_input_.size());
-  mpi::reduce(world, local_avg / world.size(), avg, std::plus(), 0);
+  Out local_sum{};
+  local_sum = static_cast<Out>(std::accumulate(local_input_.begin(), local_input_.end(), 0.0, std::plus()));
+  mpi::reduce(world, local_sum, avg, std::plus(), 0);
   std::this_thread::sleep_for(std::chrono::milliseconds(50));
   return true;
 }
@@ -171,7 +166,7 @@ template <class In, class Out>
 bool khasanyanov_k_average_vector_mpi::AvgVectorMPITaskParallel<In, Out>::post_processing() {
   internal_order_test();
   if (world.rank() == 0) {
-    reinterpret_cast<Out*>(taskData->outputs[0])[0] = avg;
+    reinterpret_cast<Out*>(taskData->outputs[0])[0] = avg / input_.size();
   }
   return true;
 }

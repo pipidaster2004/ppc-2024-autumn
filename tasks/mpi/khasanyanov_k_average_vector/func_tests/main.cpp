@@ -3,56 +3,35 @@
 #include <numeric>
 #include <vector>
 
+#include "../include/avg_mpi.hpp"
 #include "core/task/include/task.hpp"
 #include "gtest/gtest.h"
-#include "mpi/khasanyanov_k_average_vector/include/avg_mpi.hpp"
 
 //=========================================sequence=========================================
 
-TEST(khasanyanov_k_average_vector_seq, test_int) {
-  std::vector<int32_t> in(3333, 77);
-  std::vector<double> out(1, 0.0);
+#define FUNC_SEQ_TEST(InType, OutType, Size, Value)                                                   \
+                                                                                                      \
+  TEST(khasanyanov_k_average_vector_seq, test_##InType) {                                             \
+    std::vector<InType> in(Size, static_cast<InType>(Value));                                         \
+    std::vector<OutType> out(1, 0.0);                                                                 \
+    std::shared_ptr<ppc::core::TaskData> taskData =                                                   \
+        khasanyanov_k_average_vector_mpi::create_task_data<InType, OutType>(in, out);                 \
+    khasanyanov_k_average_vector_mpi::AvgVectorMPITaskSequential<InType, OutType> testTask(taskData); \
+    RUN_TASK(testTask);                                                                               \
+    EXPECT_NEAR(out[0], static_cast<InType>(Value), 1e-5);                                            \
+  }
 
-  std::shared_ptr<ppc::core::TaskData> taskData =
-      khasanyanov_k_average_vector_mpi::create_task_data<int32_t, double>(in, out);
-
-  khasanyanov_k_average_vector_mpi::AvgVectorMPITaskSequential<int32_t, double> testTask(taskData);
-
-  RUN_TASK(testTask);
-  EXPECT_NEAR(out[0], 77, 1e-5);
-
-  // ASSERT_TRUE(testTask.validation());
-  // testTask.pre_processing();
-  // testTask.run();
-  // testTask.post_processing();
-  // EXPECT_NEAR(out[0], 77, 1e-5);
-}
-
-TEST(khasanyanov_k_average_vector_seq, test_double) {
-  std::vector<double> in(3333, 7.7);
-  std::vector<double> out(1, 0.0);
-
-  std::shared_ptr<ppc::core::TaskData> taskData =
-      khasanyanov_k_average_vector_mpi::create_task_data<double, double>(in, out);
-
-  khasanyanov_k_average_vector_mpi::AvgVectorMPITaskSequential<double, double> testTask(taskData);
-
-  RUN_TASK(testTask);
-  EXPECT_NEAR(out[0], 7.7, 1e-5);
-}
-
-TEST(khasanyanov_k_average_vector_seq, test_float) {
-  std::vector<float> in(3333, 7.7f);
-  std::vector<double> out(1, 0.0);
-
-  std::shared_ptr<ppc::core::TaskData> taskData =
-      khasanyanov_k_average_vector_mpi::create_task_data<float, double>(in, out);
-
-  khasanyanov_k_average_vector_mpi::AvgVectorMPITaskSequential<float, double> testTask(taskData);
-
-  RUN_TASK(testTask);
-  EXPECT_NEAR(out[0], 7.7, 1e-5);
-}
+#define RUN_FUNC_SEQ_TESTS(Size, Value)        \
+  FUNC_SEQ_TEST(int8_t, double, Size, Value)   \
+  FUNC_SEQ_TEST(int16_t, double, Size, Value)  \
+  FUNC_SEQ_TEST(int32_t, double, Size, Value)  \
+  FUNC_SEQ_TEST(int64_t, double, Size, Value)  \
+  FUNC_SEQ_TEST(uint8_t, double, Size, Value)  \
+  FUNC_SEQ_TEST(uint16_t, double, Size, Value) \
+  FUNC_SEQ_TEST(uint32_t, double, Size, Value) \
+  FUNC_SEQ_TEST(uint64_t, double, Size, Value) \
+  FUNC_SEQ_TEST(double, double, Size, Value)   \
+  FUNC_SEQ_TEST(float, double, Size, Value)
 
 TEST(khasanyanov_k_average_vector_seq, test_random) {
   std::vector<double> in = khasanyanov_k_average_vector_mpi::get_random_vector<double>(15);
@@ -68,103 +47,50 @@ TEST(khasanyanov_k_average_vector_seq, test_random) {
   EXPECT_NEAR(out[0], expect_res, 1e-5);
 }
 
-TEST(khasanyanov_k_average_vector_seq, test_uint) {
-  std::vector<std::uint8_t> in(1200, 3);
-  std::vector<double> out(1, 0.0);
-
-  std::shared_ptr<ppc::core::TaskData> taskData =
-      khasanyanov_k_average_vector_mpi::create_task_data<std::uint8_t, double>(in, out);
-
-  khasanyanov_k_average_vector_mpi::AvgVectorMPITaskSequential<std::uint8_t, double> testTask(taskData);
-  RUN_TASK(testTask);
-  EXPECT_NEAR(out[0], 3, 1e-5);
-}
-
 //=========================================parallel=========================================
 
 namespace mpi = boost::mpi;
 
-TEST(khasanyanov_k_average_vector_mpi, test_float) {
-  mpi::communicator world;
-  std::vector<float> in(1234, 3.3f);
-  std::vector<double> out(1, 0.0);
-
-  std::shared_ptr<ppc::core::TaskData> taskData = std::make_shared<ppc::core::TaskData>();
-  if (world.rank() == 0) {
-    taskData = khasanyanov_k_average_vector_mpi::create_task_data<float, double>(in, out);
+#define FUNC_MPI_TEST(InType, OutType, Size)                                                               \
+  TEST(khasanyanov_k_average_vector_mpi, test_##InType) {                                                  \
+    mpi::communicator world;                                                                               \
+    std::vector<InType> in = khasanyanov_k_average_vector_mpi::get_random_vector<InType>(Size);            \
+    std::vector<OutType> out(1, 0.0);                                                                      \
+    std::shared_ptr<ppc::core::TaskData> taskData = std::make_shared<ppc::core::TaskData>();               \
+    if (world.rank() == 0) {                                                                               \
+      taskData = khasanyanov_k_average_vector_mpi::create_task_data<InType, OutType>(in, out);             \
+    }                                                                                                      \
+    khasanyanov_k_average_vector_mpi::AvgVectorMPITaskParallel<InType, OutType> testTask(taskData);        \
+    RUN_TASK(testTask);                                                                                    \
+    if (world.rank() == 0) {                                                                               \
+      std::vector<OutType> seq_out(1, 0.0);                                                                \
+                                                                                                           \
+      std::shared_ptr<ppc::core::TaskData> taskDataSeq =                                                   \
+          khasanyanov_k_average_vector_mpi::create_task_data<InType, OutType>(in, seq_out);                \
+                                                                                                           \
+      khasanyanov_k_average_vector_mpi::AvgVectorMPITaskSequential<InType, OutType> testMpiTaskSequential( \
+          taskDataSeq);                                                                                    \
+                                                                                                           \
+      RUN_TASK(testMpiTaskSequential);                                                                     \
+                                                                                                           \
+      EXPECT_NEAR(seq_out[0], out[0], 1e-5);                                                               \
+    }                                                                                                      \
   }
 
-  khasanyanov_k_average_vector_mpi::AvgVectorMPITaskParallel<float, double> testTask(taskData);
+#define RUN_FUNC_MPI_TESTS(Size)        \
+  FUNC_MPI_TEST(int8_t, double, Size)   \
+  FUNC_MPI_TEST(int16_t, double, Size)  \
+  FUNC_MPI_TEST(int32_t, double, Size)  \
+  FUNC_MPI_TEST(int64_t, double, Size)  \
+  FUNC_MPI_TEST(uint8_t, double, Size)  \
+  FUNC_MPI_TEST(uint16_t, double, Size) \
+  FUNC_MPI_TEST(uint32_t, double, Size) \
+  FUNC_MPI_TEST(uint64_t, double, Size) \
+  FUNC_MPI_TEST(double, double, Size)   \
+  FUNC_MPI_TEST(float, double, Size)
 
-  RUN_TASK(testTask);
+#define RUN_FUNC_TESTS(Size, Value) \
+  RUN_FUNC_SEQ_TESTS(Size, Value)   \
+  RUN_FUNC_MPI_TESTS(Size)
 
-  if (world.rank() == 0) {
-    std::vector<double> seq_out(1, 0);
-
-    std::shared_ptr<ppc::core::TaskData> taskDataSeq =
-        khasanyanov_k_average_vector_mpi::create_task_data<float, double>(in, seq_out);
-
-    khasanyanov_k_average_vector_mpi::AvgVectorMPITaskSequential<float, double> testMpiTaskSequential(taskDataSeq);
-
-    RUN_TASK(testMpiTaskSequential);
-
-    EXPECT_NEAR(seq_out[0], out[0], 1e-5);
-  }
-}
-
-TEST(khasanyanov_k_average_vector_mpi, test_int) {
-  mpi::communicator world;
-  std::vector<int> in(1234, 3);
-  std::vector<double> out(1, 0.0);
-
-  std::shared_ptr<ppc::core::TaskData> taskData = std::make_shared<ppc::core::TaskData>();
-  if (world.rank() == 0) {
-    taskData = khasanyanov_k_average_vector_mpi::create_task_data<int, double>(in, out);
-  }
-
-  khasanyanov_k_average_vector_mpi::AvgVectorMPITaskParallel<int, double> testTask(taskData);
-
-  RUN_TASK(testTask);
-
-  if (world.rank() == 0) {
-    std::vector<double> seq_out(1, 0);
-
-    std::shared_ptr<ppc::core::TaskData> taskDataSeq =
-        khasanyanov_k_average_vector_mpi::create_task_data<int, double>(in, seq_out);
-
-    khasanyanov_k_average_vector_mpi::AvgVectorMPITaskSequential<int, double> testMpiTaskSequential(taskDataSeq);
-
-    RUN_TASK(testMpiTaskSequential);
-
-    EXPECT_NEAR(seq_out[0], out[0], 1e-5);
-  }
-}
-
-TEST(khasanyanov_k_average_vector_mpi, test_uint8) {
-  mpi::communicator world;
-  std::vector<std::uint8_t> in(1234, 3);
-  std::vector<double> out(1, 0.0);
-
-  std::shared_ptr<ppc::core::TaskData> taskData = std::make_shared<ppc::core::TaskData>();
-  if (world.rank() == 0) {
-    taskData = khasanyanov_k_average_vector_mpi::create_task_data<std::uint8_t, double>(in, out);
-  }
-
-  khasanyanov_k_average_vector_mpi::AvgVectorMPITaskParallel<std::uint8_t, double> testTask(taskData);
-
-  RUN_TASK(testTask);
-
-  if (world.rank() == 0) {
-    std::vector<double> seq_out(1, 0);
-
-    std::shared_ptr<ppc::core::TaskData> taskDataSeq =
-        khasanyanov_k_average_vector_mpi::create_task_data<std::uint8_t, double>(in, seq_out);
-
-    khasanyanov_k_average_vector_mpi::AvgVectorMPITaskSequential<std::uint8_t, double> testMpiTaskSequential(
-        taskDataSeq);
-
-    RUN_TASK(testMpiTaskSequential);
-
-    EXPECT_NEAR(seq_out[0], out[0], 1e-5);
-  }
-}
+RUN_FUNC_TESTS(1234, 7.7)
