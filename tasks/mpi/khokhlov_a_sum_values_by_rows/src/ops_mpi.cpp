@@ -92,7 +92,7 @@ bool khokhlov_a_sum_values_by_rows_mpi::Sum_val_by_rows_mpi::run() {
   }
   if (world.rank() == 0) {
     std::vector<int> local_res(row + delta * world.size());
-    std::vector<int> sizes(world.size(), delta);
+    std::vector<int> sizes(world.size(), col*delta);
     boost::mpi::gatherv(world, local_sum.data(), local_sum.size(), local_res.data(), sizes, 0);
     local_res.resize(row);
     sum = local_res;
