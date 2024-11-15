@@ -181,14 +181,24 @@ TEST(khokhlov_a_sum_values_by_rows_mpi, test_const_diag_matrix_with_negativ) {
 
 TEST(khokhlov_a_sum_values_by_rows_mpi, test_random_matrix) {
   boost::mpi::communicator world;
+  int cols = 20;
+  int rows = 13;
 
-  int cols = 500;
-  int rows = 300;
 
   // Create data
-  std::vector<int> in = khokhlov_a_sum_values_by_rows_mpi::getRandomMatrix(rows, cols);
+  std::vector<int> in = khokhlov_a_sum_values_by_rows_mpi::getRandomMatrix(rows * cols);
+
+
   std::vector<int> out_par(rows, 0);
 
+  std::vector<int> exp(rows, 0);
+  for (int i = 0; i < rows; i++) {
+   int tmp_sum = 0;
+   for (int j = 0; j < cols; j++) {
+     tmp_sum += in[i * cols + j];
+   }
+   exp[i] += tmp_sum;
+  }
   // Create TaskData
   std::shared_ptr<ppc::core::TaskData> taskDataPar = std::make_shared<ppc::core::TaskData>();
 
@@ -207,6 +217,7 @@ TEST(khokhlov_a_sum_values_by_rows_mpi, test_random_matrix) {
   Sum_val_by_rows_mpi.run();
   Sum_val_by_rows_mpi.post_processing();
 
+  ASSERT_EQ(out_par, exp);
   if (world.rank() == 0) {
     // Create data
     std::vector<int> out_seq(rows, 0);

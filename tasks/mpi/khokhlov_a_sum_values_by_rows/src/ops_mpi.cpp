@@ -65,42 +65,49 @@ bool khokhlov_a_sum_values_by_rows_mpi::Sum_val_by_rows_mpi::validation() {
 bool khokhlov_a_sum_values_by_rows_mpi::Sum_val_by_rows_mpi::run() {
   internal_order_test();
   int delta = 0;
-  if (world.rank() == 0) {
-    delta = (taskData->inputs_count[1] / world.size());
-    delta += (taskData->inputs_count[1] % world.size() == 0) ? 0 : 1;
-  }
-  broadcast(world, delta, 0);
+  int last_row = 0;
 
   if (world.rank() == 0) {
-    for (int proc = 1; proc < world.size(); proc++) {
-      world.send(proc, 0, input_.data() + proc * delta * col, col*delta);
+    delta = row / world.size();
+    last_row = row % world.size();
+  }
+
+  broadcast(world, delta, 0);
+  broadcast(world, last_row, 0);
+
+int counts = delta + (world.rank() == world.size() - 1 ? last_row : 0);
+
+if (world.rank() == 0) {
+  for (int proc = 1; proc < world.size(); proc++) {
+    int counts_proc = delta + (proc == world.size() - 1 ? last_row : 0);
+    int offset = proc * delta * col;
+    world.send(proc, 0, input_.data() + offset, counts_proc * col);
+  }
+  local_input_ = std::vector<int>(input_.begin(), input_.begin() + counts * col);
+} else {
+  local_input_ = std::vector<int>(counts * col, 0);
+  world.recv(0, 0, local_input_.data(), counts * col);
+}
+
+  std::vector<int> local_sum(counts, 0);
+  for (int i = 0; i < counts; ++i) {
+    for (int j = 0; j < col; ++j) {
+      local_sum[i] += local_input_[i * col + j];
     }
   }
-  local_input_ = std::vector<int>(delta);
+
   if (world.rank() == 0) {
-    local_input_ = std::vector<int>(input_.begin(), input_.begin() + delta * col);
-  } else {
-    world.recv(0, 0, local_input_.data(), col*delta);
-  }
-  std::vector<int> local_sum;
-  for (int i = 0; i < delta; i++) {
-    int tmp_sum = 0;
-    for (int j = 0; j < col; j++) {
-      tmp_sum += local_input_[i * col + j];
-    }
-    local_sum.push_back(tmp_sum);
-  }
-  if (world.rank() == 0) {
-    std::vector<int> local_res(row + delta * world.size());
-    std::vector<int> sizes(world.size(), col*delta);
+    std::vector<int> local_res(row);
+    std::vector<int> sizes(world.size(), delta);
+    sizes.back() = delta + last_row;
     boost::mpi::gatherv(world, local_sum.data(), local_sum.size(), local_res.data(), sizes, 0);
-    local_res.resize(row);
     sum = local_res;
   } else {
     boost::mpi::gatherv(world, local_sum.data(), local_sum.size(), 0);
   }
   return true;
-} 
+}
+
 
 bool khokhlov_a_sum_values_by_rows_mpi::Sum_val_by_rows_mpi::post_processing() {
   internal_order_test();
@@ -109,8 +116,8 @@ bool khokhlov_a_sum_values_by_rows_mpi::Sum_val_by_rows_mpi::post_processing() {
   return true;
 }
 
-std::vector<int> khokhlov_a_sum_values_by_rows_mpi::getRandomMatrix(int rows, int cols) {
-  int sz = rows * cols;
+std::vector<int> khokhlov_a_sum_values_by_rows_mpi::getRandomMatrix(int size) {
+  int sz = size;
   std::random_device dev;
   std::mt19937 gen(dev());
   std::vector<int> vec(sz);

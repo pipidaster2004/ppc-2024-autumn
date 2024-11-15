@@ -11,7 +11,7 @@
 
 namespace khokhlov_a_sum_values_by_rows_mpi {
 
-std::vector<int> getRandomMatrix(int rows, int cols);
+std::vector<int> getRandomMatrix(int size);
 
 class Sum_val_by_rows_seq : public ppc::core::Task {
  public:
