@@ -101,8 +101,8 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix) {
     taskdataSeq->inputs.emplace_back(reinterpret_cast<uint8_t *>(b.data()));
     taskdataSeq->inputs_count.emplace_back(n);
     taskdataSeq->inputs_count.emplace_back(maxiter);
-    taskdataSeq->outputs.emplace_back(reinterpret_cast<uint8_t *>(result.data()));
-    taskdataSeq->outputs_count.emplace_back(result.size());
+    taskdataSeq->outputs.emplace_back(reinterpret_cast<uint8_t *>(result_seq.data()));
+    taskdataSeq->outputs_count.emplace_back(result_seq.size());
 
     // crate task
     khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq seidel_method_seq(taskdataSeq);
