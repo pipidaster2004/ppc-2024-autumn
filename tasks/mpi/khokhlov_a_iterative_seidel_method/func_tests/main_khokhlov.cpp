@@ -17,19 +17,19 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_empty_matrix) {
   std::vector<double> result;
 
   // create task data
-  std::shared_ptr<ppc::core::TaskData> taskdataSeq = std::make_shared<ppc::core::TaskData>();
+  std::shared_ptr<ppc::core::TaskData> taskdataMpi = std::make_shared<ppc::core::TaskData>();
   if (world.rank() == 0) {
-    taskdataSeq->inputs.emplace_back(reinterpret_cast<uint8_t *>(A.data()));
-    taskdataSeq->inputs.emplace_back(reinterpret_cast<uint8_t *>(b.data()));
-    taskdataSeq->inputs_count.emplace_back(n);
-    taskdataSeq->inputs_count.emplace_back(maxiter);
-    taskdataSeq->outputs.emplace_back(reinterpret_cast<uint8_t *>(result.data()));
-    taskdataSeq->outputs_count.emplace_back(result.size());
+    taskdataMpi->inputs.emplace_back(reinterpret_cast<uint8_t *>(A.data()));
+    taskdataMpi->inputs.emplace_back(reinterpret_cast<uint8_t *>(b.data()));
+    taskdataMpi->inputs_count.emplace_back(n);
+    taskdataMpi->inputs_count.emplace_back(maxiter);
+    taskdataMpi->outputs.emplace_back(reinterpret_cast<uint8_t *>(result.data()));
+    taskdataMpi->outputs_count.emplace_back(result.size());
   }
 
   // crate task
-  khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi seidel_method_mpi(taskdataSeq);
   if (world.rank() == 0) {
+    khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi seidel_method_mpi(taskdataMpi);
     ASSERT_FALSE(seidel_method_mpi.validation());
   }
 }
@@ -46,19 +46,19 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_invalid_iter) {
   std::vector<double> result;
 
   // create task data
-  std::shared_ptr<ppc::core::TaskData> taskdataSeq = std::make_shared<ppc::core::TaskData>();
+  std::shared_ptr<ppc::core::TaskData> taskdataMpi = std::make_shared<ppc::core::TaskData>();
   if (world.rank() == 0) {
-    taskdataSeq->inputs.emplace_back(reinterpret_cast<uint8_t *>(A.data()));
-    taskdataSeq->inputs.emplace_back(reinterpret_cast<uint8_t *>(b.data()));
-    taskdataSeq->inputs_count.emplace_back(n);
-    taskdataSeq->inputs_count.emplace_back(maxiter);
-    taskdataSeq->outputs.emplace_back(reinterpret_cast<uint8_t *>(result.data()));
-    taskdataSeq->outputs_count.emplace_back(result.size());
+    taskdataMpi->inputs.emplace_back(reinterpret_cast<uint8_t *>(A.data()));
+    taskdataMpi->inputs.emplace_back(reinterpret_cast<uint8_t *>(b.data()));
+    taskdataMpi->inputs_count.emplace_back(n);
+    taskdataMpi->inputs_count.emplace_back(maxiter);
+    taskdataMpi->outputs.emplace_back(reinterpret_cast<uint8_t *>(result.data()));
+    taskdataMpi->outputs_count.emplace_back(result.size());
   }
 
   // crate task
-  khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi seidel_method_mpi(taskdataSeq);
   if (world.rank() == 0) {
+    khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi seidel_method_mpi(taskdataMpi);
     ASSERT_FALSE(seidel_method_mpi.validation());
   }
 }
