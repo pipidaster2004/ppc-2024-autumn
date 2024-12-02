@@ -170,6 +170,8 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
     global_norm = std::sqrt(global_norm);
     if (world.rank() == 0) {
       boost::mpi::gatherv(world, local_result.data(), local_n, result.data(), send_counts_b, displs_b, 0);
+    } else {
+      boost::mpi::gatherv(world, local_result.data(), local_n, 0);
     }
     if (global_norm < EPSILON) {
       break;
