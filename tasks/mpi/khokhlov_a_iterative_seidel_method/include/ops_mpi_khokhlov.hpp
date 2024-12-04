@@ -41,7 +41,7 @@ class seidel_method_mpi : public ppc::core::Task {
   const double EPSILON = 1e-6;
   std::vector<double> A, local_A;
   std::vector<double> b, local_b;
-  std::vector<double> result, local_result;
+  std::vector<double> x, prevX, local_x;
   int maxIterations, n;
 };
 }  // namespace khokhlov_a_iterative_seidel_method_mpi

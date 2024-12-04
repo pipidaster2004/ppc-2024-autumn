@@ -88,7 +88,7 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::pre_processing()
     maxIterations = taskData->inputs_count[1];
 
     // Init value for output
-    result = std::vector<double>(taskData->inputs_count[0], 0);
+    x = std::vector<double>(taskData->inputs_count[0], 0);
   }
   return true;
 }
@@ -111,7 +111,8 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
 
   local_A.resize(local_n * n);
   local_b.resize(local_n);
-  local_result.resize(local_n, 0.0);
+  local_x.resize(local_n);
+  prevX.resize(n, 0.0);
 
   std::vector<int> send_counts_A(world.size());
   std::vector<int> send_counts_b(world.size());
@@ -119,22 +120,19 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
   std::vector<int> displs_b(world.size());
 
   for (int i = 0; i < world.size(); ++i) {
-    send_counts_A[i] = (i == world.size() - 1) ? delta + last_rows : delta;
+    send_counts_A[i] = local_n;
     send_counts_A[i] *= n;
     displs_A[i] = (i > 0) ? displs_A[i - 1] + send_counts_A[i - 1] : 0;
-    send_counts_b[i] = (i == world.size() - 1) ? delta + last_rows : delta;
+    send_counts_b[i] = local_n;
     displs_b[i] = (i > 0) ? displs_b[i - 1] + send_counts_b[i - 1] : 0;
   }
   //if (world.rank() == 0) {
     boost::mpi::scatterv(world, A.data(), send_counts_A, displs_A, local_A.data(), send_counts_A[world.rank()], 0);
-    boost::mpi::scatterv(world, b.data(), send_counts_b, displs_b, local_b.data(), send_counts_b[world.rank()] / n, 0);
+    boost::mpi::scatterv(world, b.data(), send_counts_b, displs_b, local_b.data(), send_counts_b[world.rank()], 0);
   //} else {
   //  boost::mpi::scatterv(world, local_A.data(), send_counts_A[world.rank()], 0);
   //  boost::mpi::scatterv(world, local_b.data(), send_counts_b[world.rank()] / n, 0);
   //}
-
-  std::vector<double> x(n, 0.0);
-  std::vector<double> prevX(n, 0.0);
 
   for (int iter = 0; iter < maxIterations; ++iter) {
     for (int i = 0; i < local_n; ++i) {
@@ -146,13 +144,13 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
         }
       }
       if (local_A[i * n + i] != 0) {
-        local_result[i] = (local_b[i] - sum) / local_A[i * n + global_i];
+        local_x[i] = (local_b[i] - sum) / local_A[i * n + global_i];
       } else {
-        local_result[i] = 0;
+        local_x[i] = 0;
       }
     }
 
-    boost::mpi::all_gather(world, local_result.data(), local_n, x.data());
+    // boost::mpi::all_gather(world, local_x.data(), local_n, x.data());
 
     if (world.rank() == 0) {
       prevX = x;
@@ -169,9 +167,9 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
     boost::mpi::all_reduce(world, local_norm, global_norm, std::plus<double>());
     global_norm = std::sqrt(global_norm);
     if (world.rank() == 0) {
-      boost::mpi::gatherv(world, local_result.data(), local_n, result.data(), send_counts_b, displs_b, 0);
+      boost::mpi::gatherv(world, local_x.data(), local_n, x.data(), send_counts_b, displs_b, 0);
     } else {
-      boost::mpi::gatherv(world, local_result.data(), local_n, 0);
+      boost::mpi::gatherv(world, local_x.data(), local_n, 0);
     }
     if (global_norm < EPSILON) {
       break;
@@ -183,7 +181,7 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
 bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::post_processing() {
   internal_order_test();
   if (world.rank() == 0) {
-    for (int i = 0; i < n; i++) reinterpret_cast<double*>(taskData->outputs[0])[i] = result[i];
+    for (int i = 0; i < n; i++) reinterpret_cast<double*>(taskData->outputs[0])[i] = x[i];
   }
   return true;
 }
