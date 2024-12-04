@@ -83,9 +83,13 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix) {
   };
   khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq seidel_method_mpi(taskdataMpi);
   ASSERT_TRUE(seidel_method_mpi.validation());
+  std::cout << world.rank() << std::endl;
   seidel_method_mpi.pre_processing();
+  std::cout << world.rank() << std::endl;
   seidel_method_mpi.run();
+  std::cout << world.rank() << std::endl;
   seidel_method_mpi.post_processing();
+  std::cout << world.rank() << std::endl;
 
   ASSERT_EQ(result.size(), b.size());
 

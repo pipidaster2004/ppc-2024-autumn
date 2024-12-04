@@ -79,9 +79,13 @@ TEST(khokhlov_a_iterative_seidel_method_seq, test_task_run_mpi) {
   // crate task
   auto testTaskMpi = std::make_shared<khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq>(taskdataMpi);
   ASSERT_EQ(testTaskMpi->validation(), true);
+  std::cout << world.rank() << std::endl;
   testTaskMpi->pre_processing();
+  std::cout << world.rank() << std::endl;
   testTaskMpi->run();
+  std::cout << world.rank() << std::endl;
   testTaskMpi->post_processing();
+  std::cout << world.rank() << std::endl;
 
   // Create Perf attributes
   auto perfAttr = std::make_shared<ppc::core::PerfAttr>();

@@ -3,6 +3,7 @@
 bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq::pre_processing() {
   internal_order_test();
   // init matrix
+
   A = std::vector<double>(taskData->inputs_count[0] * taskData->inputs_count[0]);
   auto tmp = reinterpret_cast<double*>(taskData->inputs[0]);
   std::copy(tmp, tmp + taskData->inputs_count[0] * taskData->inputs_count[0], A.begin());
@@ -70,6 +71,10 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq::post_processing(
 
 bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::pre_processing() {
   internal_order_test();
+  std::cerr << world.rank() << std::endl;
+  std::ofstream qwe("C:\\Users\\Andre\\ppc\\123.txt");
+  qwe << "pizda";
+  qwe.close();
   if (world.rank() == 0) {
     // init matrix
     A = std::vector<double>(taskData->inputs_count[0] * taskData->inputs_count[0]);
@@ -109,6 +114,7 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
   int last_rows = n % world.size();
 
   int local_n = (world.rank() == world.size() - 1) ? delta + last_rows : delta;
+  std::cout << world.rank() << std::endl;
 
   local_A.resize(local_n * n);
   local_b.resize(local_n);
@@ -127,6 +133,7 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
     send_counts_b[i] = (i == world.size() - 1) ? delta + last_rows : delta;
     displs_b[i] = (i > 0) ? displs_b[i - 1] + send_counts_b[i - 1] : 0;
   }
+  std::cerr << world.rank();
   // if (world.rank() == 0) {
   boost::mpi::scatterv(world, A.data(), send_counts_A, /*displs_A,*/ local_A.data(), /*send_counts_A[world.rank()],*/ 0);
   boost::mpi::scatterv(world, b.data(), send_counts_b, /*displs_b,*/ local_b.data(), /*send_counts_b[world.rank()],*/ 0);
@@ -134,7 +141,6 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
   //  boost::mpi::scatterv(world, local_A.data(), send_counts_A[world.rank()], 0);
   //  boost::mpi::scatterv(world, local_b.data(), send_counts_b[world.rank()] / n, 0);
   //}
-
   for (int iter = 0; iter < maxIterations; ++iter) {
     for (int i = 0; i < local_n; ++i) {
       double sum = 0;
@@ -145,7 +151,7 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
         }
       }
       if (local_A[i * n + i] != 0) {
-        local_x[i] = (local_b[i] - sum) / local_A[i * n + global_i];
+        local_x[i] = (local_b[i] - sum) / local_A[i * n + global_i];  
       } else {
         local_x[i] = 0;
       }
