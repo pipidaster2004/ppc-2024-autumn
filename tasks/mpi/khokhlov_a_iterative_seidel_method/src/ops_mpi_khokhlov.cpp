@@ -103,7 +103,8 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::validation() {
 
 bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
   internal_order_test();
-
+  boost::mpi::broadcast(world, n, 0);
+  boost::mpi::broadcast(world, maxIterations, 0);
   int delta = n / world.size();
   int last_rows = n % world.size();
 
@@ -126,9 +127,9 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
     send_counts_b[i] = (i == world.size() - 1) ? delta + last_rows : delta;
     displs_b[i] = (i > 0) ? displs_b[i - 1] + send_counts_b[i - 1] : 0;
   }
-  //if (world.rank() == 0) {
-  boost::mpi::scatterv(world, A.data(), send_counts_A, displs_A, local_A.data(), send_counts_A[world.rank()], 0);
-  boost::mpi::scatterv(world, b.data(), send_counts_b, displs_b, local_b.data(), send_counts_b[world.rank()], 0);
+  // if (world.rank() == 0) {
+  boost::mpi::scatterv(world, A.data(), send_counts_A, local_A.data(), 0);
+  boost::mpi::scatterv(world, b.data(), send_counts_b, local_b.data(), 0);
   //} else {
   //  boost::mpi::scatterv(world, local_A.data(), send_counts_A[world.rank()], 0);
   //  boost::mpi::scatterv(world, local_b.data(), send_counts_b[world.rank()] / n, 0);
@@ -167,7 +168,7 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
     boost::mpi::all_reduce(world, local_norm, global_norm, std::plus<double>());
     global_norm = std::sqrt(global_norm);
     if (world.rank() == 0) {
-      boost::mpi::gatherv(world, local_x.data(), local_n, x.data(), send_counts_b, displs_b, 0);
+      boost::mpi::gatherv(world, local_x.data(), local_n, x.data(), send_counts_b, 0);
     } else {
       boost::mpi::gatherv(world, local_x.data(), local_n, 0);
     }
