@@ -114,7 +114,6 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
   int last_rows = n % world.size();
 
   int local_n = (world.rank() == world.size() - 1) ? delta + last_rows : delta;
-  std::cout << world.rank() << std::endl;
 
   local_A.resize(local_n * n);
   local_b.resize(local_n);
@@ -169,8 +168,7 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
     boost::mpi::all_reduce(world, local_norm, global_norm, std::plus<double>());
     global_norm = std::sqrt(global_norm);
 
-    boost::mpi::gatherv(world, local_x.data(), local_n, x.data(), send_counts_b, /*displs_b,*/ 0);
-
+    //boost::mpi::gatherv(world, local_x.data(), local_n, x.data(), send_counts_b, /*displs_b,*/ 0);
     if (world.rank() == 0) {
       prevX = x;
     }
