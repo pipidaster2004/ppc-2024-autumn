@@ -14,7 +14,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_empty_matrix) {
   std::vector<double> A = {};
   std::vector<double> b = {};
   std::vector<double> expect = {};
-  std::vector<double> result;
+  std::vector<double> result = {};
 
   // create task data
   std::shared_ptr<ppc::core::TaskData> taskdataMpi = std::make_shared<ppc::core::TaskData>();
@@ -28,10 +28,9 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_empty_matrix) {
   }
 
   // crate task
-  if (world.rank() == 0) {
-    khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi seidel_method_mpi(taskdataMpi);
-    ASSERT_FALSE(seidel_method_mpi.validation());
-  }
+  khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi seidel_method_mpi(taskdataMpi);
+  ASSERT_FALSE(seidel_method_mpi.validation());
+
 }
 
 TEST(khokhlov_a_iterative_seidel_method_mpi, test_invalid_iter) {
@@ -43,7 +42,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_invalid_iter) {
   std::vector<double> A = {1, 2, 3, 4};
   std::vector<double> b = {1, 2};
   std::vector<double> expect = {};
-  std::vector<double> result;
+  std::vector<double> result = {};
 
   // create task data
   std::shared_ptr<ppc::core::TaskData> taskdataMpi = std::make_shared<ppc::core::TaskData>();
@@ -57,10 +56,8 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_invalid_iter) {
   }
 
   // crate task
-  if (world.rank() == 0) {
-    khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi seidel_method_mpi(taskdataMpi);
-    ASSERT_FALSE(seidel_method_mpi.validation());
-  }
+  khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi seidel_method_mpi(taskdataMpi);
+  ASSERT_FALSE(seidel_method_mpi.validation());
 }
 
 TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix) {
@@ -90,9 +87,8 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix) {
   seidel_method_mpi.run();
   seidel_method_mpi.post_processing();
 
-  if (world.rank() == 0) {
-    ASSERT_EQ(result.size(), b.size());
-  }
+  ASSERT_EQ(result.size(), b.size());
+
   if (world.rank() == 0) {
     std::vector<double> result_seq(n, 0.0);
     // create task data
