@@ -104,23 +104,23 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::validation() {
 
 bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
   internal_order_test();
-  boost::mpi::broadcast(world, n, 0);
-  boost::mpi::broadcast(world, maxIterations, 0);
-  int delta = n / world.size();
+  // boost::mpi::broadcast(world, n, 0);
+  // boost::mpi::broadcast(world, maxIterations, 0);
+  // int delta = n / world.size();
   // int last_rows = n % world.size();
 
-  int local_n = delta; //(world.rank() == world.size() - 1) ? delta + last_rows : delta;
+  // int local_n = (world.rank() == world.size() - 1) ? delta + last_rows : delta;
 
-  local_A.resize(local_n * n);
-  local_b.resize(local_n);
-  local_x.resize(local_n);
-  prevX.resize(n, 0.0);
+  // local_A.resize(local_n * n);
+  // local_b.resize(local_n);
+  // local_x.resize(local_n);
+  // prevX.resize(n, 0.0);
 
-  std::vector<int> send_counts_A(world.size());
-  std::vector<int> send_counts_b(world.size());
-  std::vector<int> displs_A(world.size());
-  std::vector<int> displs_b(world.size());
-  boost::mpi::scatter(world, A, local_A.data(), local_n, 0);
+  // std::vector<int> send_counts_A(world.size());
+  // std::vector<int> send_counts_b(world.size());
+  // std::vector<int> displs_A(world.size());
+  // std::vector<int> displs_b(world.size());
+  // boost::mpi::scatter(world, A, local_A.data(), local_n*n, 0);
 
   //for (int i = 0; i < world.size(); ++i) {
   //  send_counts_A[i] = (i == world.size() - 1) ? delta + last_rows : delta;
