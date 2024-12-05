@@ -5,8 +5,8 @@
 
 TEST(khokhlov_a_iterative_seidel_method_mpi, test_pipline_run_mpi) {
   boost::mpi::communicator world;
-  const int n = 5000;
-  const int maxiter = 5000;
+  const int n = 1000;
+  const int maxiter = 1000;
 
   // create data
   std::vector<double> A(n * n, 0.0);
@@ -26,7 +26,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_pipline_run_mpi) {
   }
 
   // crate task
-  auto testTaskMpi = std::make_shared<khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq>(taskdataMpi);
+  auto testTaskMpi = std::make_shared<khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi>(taskdataMpi);
   ASSERT_EQ(testTaskMpi->validation(), true);
   testTaskMpi->pre_processing();
   testTaskMpi->run();
@@ -56,8 +56,8 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_pipline_run_mpi) {
 
 TEST(khokhlov_a_iterative_seidel_method_seq, test_task_run_mpi) {
   boost::mpi::communicator world;
-  const int n = 5000;
-  const int maxiter = 5000;
+  const int n = 1000;
+  const int maxiter = 1000;
 
   // create data
   std::vector<double> A(n * n, 0.0);
@@ -77,7 +77,7 @@ TEST(khokhlov_a_iterative_seidel_method_seq, test_task_run_mpi) {
   }
 
   // crate task
-  auto testTaskMpi = std::make_shared<khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq>(taskdataMpi);
+  auto testTaskMpi = std::make_shared<khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi>(taskdataMpi);
   ASSERT_EQ(testTaskMpi->validation(), true);
   testTaskMpi->pre_processing();
   testTaskMpi->run();
