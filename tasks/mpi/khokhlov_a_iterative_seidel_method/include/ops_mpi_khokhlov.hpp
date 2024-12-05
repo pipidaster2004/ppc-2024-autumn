@@ -40,7 +40,7 @@ class seidel_method_mpi : public ppc::core::Task {
 
  private:
   boost::mpi::communicator world;
-  // const double EPSILON = 1e-6;
+  const double EPSILON = 1e-6;
   std::vector<double> A, local_A;
   std::vector<double> b, local_b;
   std::vector<double> x, prevX, local_x, result;

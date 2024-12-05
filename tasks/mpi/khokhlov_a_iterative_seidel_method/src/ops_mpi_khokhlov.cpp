@@ -155,24 +155,24 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
 
   boost::mpi::gatherv(world, local_x.data(), local_n, x.data(), send_counts_b, 0);
 
-  //  double local_norm = 0.0;
-  //  for (int i = 0; i < local_n; ++i) {
-  //    int global_i = displs_b[world.rank()] + i;
-  //    local_norm += std::pow(x[global_i] - prevX[global_i], 2);
-  //  }
+   double local_norm = 0.0;
+   for (int i = 0; i < local_n; ++i) {
+     int global_i = displs_b[world.rank()] + i;
+     local_norm += std::pow(x[global_i] - prevX[global_i], 2);
+   }
 
-  //  double global_norm = 0.0;
-  //  boost::mpi::reduce(world, local_norm, global_norm, std::plus<double>(), 0);
-  //  global_norm = std::sqrt(global_norm);
+   double global_norm = 0.0;
+   boost::mpi::all_reduce(world, local_norm, global_norm, std::plus<double>());
+   global_norm = std::sqrt(global_norm);
 
    if (world.rank() == 0) {
      prevX = x;
    }
    boost::mpi::broadcast(world, prevX.data(), n, 0);
 
-  //  if (global_norm < EPSILON) {
-  //    break;
-  //  }
+   if (global_norm < EPSILON) {
+     break;
+   }
   }
   if (world.rank() == 0){
     result = x;
