@@ -161,7 +161,7 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
     }
 
     double global_norm = 0.0;
-    boost::mpi::all_reduce(world, local_norm, global_norm, std::plus<double>());
+    boost::mpi::all_reduce(world, local_norm, global_norm, std::plus<>());
     global_norm = std::sqrt(global_norm);
 
     if (world.rank() == 0) {
