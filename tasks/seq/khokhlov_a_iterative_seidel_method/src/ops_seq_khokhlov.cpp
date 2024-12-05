@@ -4,12 +4,12 @@ bool khokhlov_a_iterative_seidel_method_seq::seidel_method_seq::pre_processing()
   internal_order_test();
   // init matrix
   A = std::vector<double>(taskData->inputs_count[0] * taskData->inputs_count[0]);
-  auto tmp = reinterpret_cast<double*>(taskData->inputs[0]);
+  auto* tmp = reinterpret_cast<double*>(taskData->inputs[0]);
   std::copy(tmp, tmp + taskData->inputs_count[0] * taskData->inputs_count[0], A.begin());
 
   // init vector
   b = std::vector<double>(taskData->inputs_count[0]);
-  auto tmp1 = reinterpret_cast<double*>(taskData->inputs[1]);
+  auto* tmp1 = reinterpret_cast<double*>(taskData->inputs[1]);
   std::copy(tmp1, tmp1 + taskData->inputs_count[0], b.begin());
 
   // init sizes
