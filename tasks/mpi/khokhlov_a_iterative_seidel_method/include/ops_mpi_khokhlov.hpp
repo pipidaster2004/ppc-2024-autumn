@@ -3,11 +3,11 @@
 #include <boost/mpi/collectives.hpp>
 #include <boost/mpi/communicator.hpp>
 #include <cmath>
+#include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <random>
 #include <vector>
-#include <iostream>
-#include <fstream>
 
 #include "core/task/include/task.hpp"
 

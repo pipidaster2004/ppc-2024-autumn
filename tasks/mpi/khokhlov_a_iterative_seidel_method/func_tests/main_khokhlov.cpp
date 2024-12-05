@@ -7,7 +7,6 @@
 #include "mpi/khokhlov_a_iterative_seidel_method/include/ops_mpi_khokhlov.hpp"
 #include "mpi/khokhlov_a_iterative_seidel_method/src/ops_mpi_khokhlov.cpp"
 
-
 TEST(khokhlov_a_iterative_seidel_method_mpi, test_empty_matrix) {
   boost::mpi::communicator world;
   const int n = 0;
@@ -33,7 +32,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_empty_matrix) {
   // crate task
   khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi mpi_task(taskdataMpi);
   if (world.rank() == 0) {
-     ASSERT_FALSE(mpi_task.validation());
+    ASSERT_FALSE(mpi_task.validation());
   }
 }
 
@@ -62,7 +61,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_invalid_iter) {
   // crate task
   khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi mpi_task(taskdataMpi);
   if (world.rank() == 0) {
-     ASSERT_FALSE(mpi_task.validation());
+    ASSERT_FALSE(mpi_task.validation());
   }
 }
 
@@ -92,7 +91,6 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_validation) {
   khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi mpi_task(taskdataMpi);
   ASSERT_TRUE(mpi_task.validation());
 }
-
 
 TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix) {
   boost::mpi::communicator world;

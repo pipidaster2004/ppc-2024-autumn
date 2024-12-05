@@ -131,50 +131,49 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
   std::vector<int> displs_b(world.size());
 
   for (int i = 0; i < world.size(); ++i) {
-   send_counts_A[i] = (i == world.size() - 1) ? delta + last_rows : delta;
-   send_counts_A[i] *= n;
-   send_counts_b[i] = (i == world.size() - 1) ? delta + last_rows : delta;
-   displs_b[i] = (i > 0) ? displs_b[i - 1] + send_counts_b[i - 1] : 0;
+    send_counts_A[i] = (i == world.size() - 1) ? delta + last_rows : delta;
+    send_counts_A[i] *= n;
+    send_counts_b[i] = (i == world.size() - 1) ? delta + last_rows : delta;
+    displs_b[i] = (i > 0) ? displs_b[i - 1] + send_counts_b[i - 1] : 0;
   }
-
 
   boost::mpi::scatterv(world, A.data(), send_counts_A, local_A.data(), 0);
   boost::mpi::scatterv(world, b.data(), send_counts_b, local_b.data(), 0);
 
   for (int iter = 0; iter < maxIterations; iter++) {
-   for (int i = 0; i < local_n; i++) {
-     double sum = 0;
-     int global_i = displs_b[world.rank()] + i;
-     for (int j = 0; j < n; j++) {
-       if (j != global_i) {
-         sum += local_A[i * n + j] * x[j];
-       }
-     }
-     local_x[i] = (local_b[i] - sum) / local_A[i * n + global_i];
-   }
+    for (int i = 0; i < local_n; i++) {
+      double sum = 0;
+      int global_i = displs_b[world.rank()] + i;
+      for (int j = 0; j < n; j++) {
+        if (j != global_i) {
+          sum += local_A[i * n + j] * x[j];
+        }
+      }
+      local_x[i] = (local_b[i] - sum) / local_A[i * n + global_i];
+    }
 
-  boost::mpi::gatherv(world, local_x.data(), local_n, x.data(), send_counts_b, 0);
+    boost::mpi::gatherv(world, local_x.data(), local_n, x.data(), send_counts_b, 0);
 
-   double local_norm = 0.0;
-   for (int i = 0; i < local_n; ++i) {
-     int global_i = displs_b[world.rank()] + i;
-     local_norm += std::pow(x[global_i] - prevX[global_i], 2);
-   }
+    double local_norm = 0.0;
+    for (int i = 0; i < local_n; ++i) {
+      int global_i = displs_b[world.rank()] + i;
+      local_norm += std::pow(x[global_i] - prevX[global_i], 2);
+    }
 
-   double global_norm = 0.0;
-   boost::mpi::all_reduce(world, local_norm, global_norm, std::plus<double>());
-   global_norm = std::sqrt(global_norm);
+    double global_norm = 0.0;
+    boost::mpi::all_reduce(world, local_norm, global_norm, std::plus<double>());
+    global_norm = std::sqrt(global_norm);
 
-   if (world.rank() == 0) {
-     prevX = x;
-   }
-   boost::mpi::broadcast(world, prevX.data(), n, 0);
+    if (world.rank() == 0) {
+      prevX = x;
+    }
+    boost::mpi::broadcast(world, prevX.data(), n, 0);
 
-   if (global_norm < EPSILON) {
-     break;
-   }
+    if (global_norm < EPSILON) {
+      break;
+    }
   }
-  if (world.rank() == 0){
+  if (world.rank() == 0) {
     result = x;
   }
   return true;
