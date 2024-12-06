@@ -3,9 +3,6 @@
 #include <boost/mpi/collectives.hpp>
 #include <boost/mpi/communicator.hpp>
 #include <cmath>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
 #include <random>
 #include <vector>
 
@@ -23,7 +20,7 @@ class seidel_method_seq : public ppc::core::Task {
   bool post_processing() override;
 
  private:
-  const double EPSILON = 1e-6;
+  double EPSILON;
   std::vector<double> A;
   std::vector<double> b;
   std::vector<double> result;
@@ -40,7 +37,7 @@ class seidel_method_mpi : public ppc::core::Task {
 
  private:
   boost::mpi::communicator world;
-  const double EPSILON = 1e-6;
+  double EPSILON;
   std::vector<double> A, local_A;
   std::vector<double> b, local_b;
   std::vector<double> x, prevX, local_x, result;

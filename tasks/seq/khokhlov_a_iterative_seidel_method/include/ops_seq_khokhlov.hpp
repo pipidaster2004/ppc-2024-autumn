@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cmath>
-#include <iomanip>
 #include <random>
 #include <vector>
 
@@ -20,7 +19,7 @@ class seidel_method_seq : public ppc::core::Task {
   bool post_processing() override;
 
  private:
-  const double EPSILON = 1e-6;
+  double EPSILON;
   std::vector<double> A;
   std::vector<double> b;
   std::vector<double> result;

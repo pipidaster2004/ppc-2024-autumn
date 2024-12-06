@@ -1,14 +1,5 @@
 #include "mpi/khokhlov_a_iterative_seidel_method/include/ops_mpi_khokhlov.hpp"
 
-#include <algorithm>
-#include <functional>
-#include <random>
-#include <string>
-#include <thread>
-#include <vector>
-
-using namespace std::chrono_literals;
-
 bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq::pre_processing() {
   internal_order_test();
   // init matrix
@@ -28,6 +19,8 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq::pre_processing()
   // init maxIterations
   maxIterations = taskData->inputs_count[1];
 
+  EPSILON = taskData->inputs_count[2];
+
   // Init value for output
   result = std::vector<double>(taskData->inputs_count[0], 0);
   return true;
@@ -35,7 +28,13 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq::pre_processing()
 
 bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq::validation() {
   internal_order_test();
-  return (taskData->inputs_count[0] > 0 && taskData->inputs_count[1] > 0);
+  std::vector<double> A_ = std::vector<double>(taskData->inputs_count[0] * taskData->inputs_count[0]);
+  auto* tmp = reinterpret_cast<double*>(taskData->inputs[0]);
+  std::copy(tmp, tmp + taskData->inputs_count[0] * taskData->inputs_count[0], A_.begin());
+  for (unsigned int i = 0; i < taskData->inputs_count[0]; i++) {
+    if (A_[i * taskData->inputs_count[0] + i] == 0) return false;
+  }
+  return (taskData->inputs_count[0] > 0 && taskData->inputs_count[1] > 0 && taskData->inputs_count[3] >= 0);
 }
 
 bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq::run() {
@@ -51,11 +50,7 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq::run() {
           sum += (A[i * n + j] * x[j]);
         }
       }
-      if (A[i * n + i] != 0) {
-        x[i] = (b[i] - sum) / A[i * n + i];
-      } else {
-        x[i] = 0.0;
-      }
+      x[i] = (b[i] - sum) / A[i * n + i];
     }
     double norm = 0.0;
     for (int i = 0; i < n; ++i) {
@@ -97,6 +92,8 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::pre_processing()
     // init maxIterations
     maxIterations = taskData->inputs_count[1];
 
+    EPSILON = taskData->inputs_count[2];
+
     // Init value for output
     result = std::vector<double>(taskData->inputs_count[0], 0.0);
   }
@@ -106,7 +103,13 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::pre_processing()
 bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::validation() {
   internal_order_test();
   if (world.rank() == 0) {
-    return (taskData->inputs_count[0] > 0 && taskData->inputs_count[1] > 0);
+    std::vector<double> A_ = std::vector<double>(taskData->inputs_count[0] * taskData->inputs_count[0]);
+    auto* tmp = reinterpret_cast<double*>(taskData->inputs[0]);
+    std::copy(tmp, tmp + taskData->inputs_count[0] * taskData->inputs_count[0], A_.begin());
+    for (unsigned int i = 0; i < taskData->inputs_count[0]; i++) {
+      if (A_[i * taskData->inputs_count[0] + i] == 0) return false;
+    }
+    return (taskData->inputs_count[0] > 0 && taskData->inputs_count[1] > 0 && taskData->inputs_count[3] >= 0);
   }
   return true;
 }
@@ -115,6 +118,7 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::run() {
   internal_order_test();
   boost::mpi::broadcast(world, n, 0);
   boost::mpi::broadcast(world, maxIterations, 0);
+  boost::mpi::broadcast(world, EPSILON, 0);
   int delta = n / world.size();
   int last_rows = n % world.size();
 

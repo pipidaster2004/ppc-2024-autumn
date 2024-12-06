@@ -18,12 +18,20 @@ bool khokhlov_a_iterative_seidel_method_seq::seidel_method_seq::pre_processing()
   // init maxIterations
   maxIterations = taskData->inputs_count[1];
 
+  EPSILON = taskData->inputs_count[2];
+
   // Init value for output
   result = std::vector<double>(taskData->inputs_count[0], 0);
   return true;
 }
 bool khokhlov_a_iterative_seidel_method_seq::seidel_method_seq::validation() {
   internal_order_test();
+  std::vector<double> A_ = std::vector<double>(taskData->inputs_count[0] * taskData->inputs_count[0]);
+  auto* tmp = reinterpret_cast<double*>(taskData->inputs[0]);
+  std::copy(tmp, tmp + taskData->inputs_count[0] * taskData->inputs_count[0], A_.begin());
+  for (unsigned int i = 0; i < taskData->inputs_count[0]; i++) {
+    if (A_[i * taskData->inputs_count[0] + i] == 0) return false;
+  }
   return (taskData->inputs_count[0] > 0 && taskData->inputs_count[1] > 0);
 }
 

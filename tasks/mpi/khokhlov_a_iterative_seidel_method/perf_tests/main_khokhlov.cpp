@@ -7,6 +7,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_pipline_run_mpi) {
   boost::mpi::communicator world;
   const int n = 1000;
   const int maxiter = 1000;
+  const double eps = 1e-6;
 
   // create data
   std::vector<double> A(n * n, 0.0);
@@ -21,6 +22,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_pipline_run_mpi) {
     taskdataMpi->inputs.emplace_back(reinterpret_cast<uint8_t *>(b.data()));
     taskdataMpi->inputs_count.emplace_back(n);
     taskdataMpi->inputs_count.emplace_back(maxiter);
+    taskdataMpi->inputs_count.emplace_back(eps);
     taskdataMpi->outputs.emplace_back(reinterpret_cast<uint8_t *>(result.data()));
     taskdataMpi->outputs_count.emplace_back(result.size());
   }
@@ -58,6 +60,7 @@ TEST(khokhlov_a_iterative_seidel_method_seq, test_task_run_mpi) {
   boost::mpi::communicator world;
   const int n = 1000;
   const int maxiter = 1000;
+  const double eps = 1e-6;
 
   // create data
   std::vector<double> A(n * n, 0.0);
@@ -72,6 +75,7 @@ TEST(khokhlov_a_iterative_seidel_method_seq, test_task_run_mpi) {
     taskdataMpi->inputs.emplace_back(reinterpret_cast<uint8_t *>(b.data()));
     taskdataMpi->inputs_count.emplace_back(n);
     taskdataMpi->inputs_count.emplace_back(maxiter);
+    taskdataMpi->inputs_count.emplace_back(eps);
     taskdataMpi->outputs.emplace_back(reinterpret_cast<uint8_t *>(result.data()));
     taskdataMpi->outputs_count.emplace_back(result.size());
   }

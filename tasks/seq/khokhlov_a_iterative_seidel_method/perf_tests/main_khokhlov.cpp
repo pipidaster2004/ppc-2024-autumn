@@ -4,8 +4,9 @@
 #include "seq/khokhlov_a_iterative_seidel_method/include/ops_seq_khokhlov.hpp"
 
 TEST(khokhlov_a_iterative_seidel_method_seq, test_pipline_run_seq) {
-  const int n = 5000;
-  const int maxiter = 5000;
+  const int n = 1000;
+  const int maxiter = 1000;
+  const double eps = 1e-6;
 
   // create data
   std::vector<double> A(n * n, 0.0);
@@ -19,6 +20,7 @@ TEST(khokhlov_a_iterative_seidel_method_seq, test_pipline_run_seq) {
   taskdataSeq->inputs.emplace_back(reinterpret_cast<uint8_t *>(b.data()));
   taskdataSeq->inputs_count.emplace_back(n);
   taskdataSeq->inputs_count.emplace_back(maxiter);
+  taskdataSeq->inputs_count.emplace_back(eps);
   taskdataSeq->outputs.emplace_back(reinterpret_cast<uint8_t *>(result.data()));
   taskdataSeq->outputs_count.emplace_back(result.size());
 
@@ -46,8 +48,9 @@ TEST(khokhlov_a_iterative_seidel_method_seq, test_pipline_run_seq) {
 }
 
 TEST(khokhlov_a_iterative_seidel_method_seq, test_task_run_seq) {
-  const int n = 5000;
-  const int maxiter = 5000;
+  const int n = 1000;
+  const int maxiter = 1000;
+  const double eps = 1e-6;
 
   // create data
   std::vector<double> A(n * n, 0.0);
@@ -61,6 +64,7 @@ TEST(khokhlov_a_iterative_seidel_method_seq, test_task_run_seq) {
   taskdataSeq->inputs.emplace_back(reinterpret_cast<uint8_t *>(b.data()));
   taskdataSeq->inputs_count.emplace_back(n);
   taskdataSeq->inputs_count.emplace_back(maxiter);
+  taskdataSeq->inputs_count.emplace_back(eps);
   taskdataSeq->outputs.emplace_back(reinterpret_cast<uint8_t *>(result.data()));
   taskdataSeq->outputs_count.emplace_back(result.size());
 
