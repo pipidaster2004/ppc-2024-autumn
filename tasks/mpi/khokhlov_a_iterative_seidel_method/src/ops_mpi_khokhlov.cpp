@@ -29,6 +29,7 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq::pre_processing()
 bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq::validation() {
   internal_order_test();
   int N = taskData->inputs_count[0];
+  if (N == 0) return false;
   std::vector<double> A_ = std::vector<double>(N * N);
   auto* tmp = reinterpret_cast<double*>(taskData->inputs[0]);
   std::copy(tmp, tmp + N * N, A_.begin());
@@ -116,6 +117,7 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::validation() {
   internal_order_test();
   if (world.rank() == 0) {
     int N = taskData->inputs_count[0];
+    if (N == 0) return false;
     std::vector<double> A_ = std::vector<double>(N * N);
     auto* tmp = reinterpret_cast<double*>(taskData->inputs[0]);
     std::copy(tmp, tmp + N * N, A_.begin());
