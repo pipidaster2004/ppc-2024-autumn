@@ -20,7 +20,7 @@ class seidel_method_seq : public ppc::core::Task {
   bool post_processing() override;
 
  private:
-  int rank(std::vector<double> A_, int rows, int cols);
+  static int rank(std::vector<double> A_, int rows, int cols);
   double EPSILON;
   std::vector<double> A;
   std::vector<double> b;
@@ -37,7 +37,7 @@ class seidel_method_mpi : public ppc::core::Task {
   bool post_processing() override;
 
  private:
-  int rank(std::vector<double> A_, int rows, int cols);
+  static int rank(std::vector<double> A_, int rows, int cols);
   boost::mpi::communicator world;
   double EPSILON;
   std::vector<double> A, local_A;
