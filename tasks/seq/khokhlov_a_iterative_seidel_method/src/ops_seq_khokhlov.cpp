@@ -45,7 +45,7 @@ bool khokhlov_a_iterative_seidel_method_seq::seidel_method_seq::validation() {
       Ab[i * N + j] = (j % N == 0) ? b_[i] : A_[i * N + j];
     }
   int rankA = rank(A_, N, N);
-  int rankAb = rank(A_, N, N + 1);
+  int rankAb = rank(Ab, N, N + 1);
   return (taskData->inputs_count[3] >= 0 && rankA == rankAb);
 }
 
