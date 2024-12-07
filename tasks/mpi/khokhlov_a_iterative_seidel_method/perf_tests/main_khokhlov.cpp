@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "core/perf/include/perf.hpp"
 #include <boost/mpi/timer.hpp>
+
+#include "core/perf/include/perf.hpp"
 #include "mpi/khokhlov_a_iterative_seidel_method/include/ops_mpi_khokhlov.hpp"
 
 TEST(khokhlov_a_iterative_seidel_method_mpi, test_pipline_run) {

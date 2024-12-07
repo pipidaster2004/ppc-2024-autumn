@@ -38,12 +38,13 @@ bool khokhlov_a_iterative_seidel_method_seq::seidel_method_seq::validation() {
   }
   std::vector<double> Ab = std::vector<double>(N * (N + 1));
   for (int i = 0; i < N; i++)
-    for (int j = 0; j < N + 1; j++){
+    for (int j = 0; j < N + 1; j++) {
       Ab[i * N + j] = (j % N == 0) ? b_[i] : A_[i * N + j];
     }
   int rankA = rank(A_, N, N);
   int rankAb = rank(A_, N, N + 1);
-  return (taskData->inputs_count[0] > 0 && taskData->inputs_count[1] > 0 && taskData->inputs_count[3] >= 0 && rankA == rankAb);
+  return (taskData->inputs_count[0] > 0 && taskData->inputs_count[1] > 0 && taskData->inputs_count[3] >= 0 &&
+          rankA == rankAb);
 }
 
 bool khokhlov_a_iterative_seidel_method_seq::seidel_method_seq::run() {
@@ -102,26 +103,26 @@ void khokhlov_a_iterative_seidel_method_seq::getRandomSLAU(std::vector<double>& 
   }
 }
 
-int khokhlov_a_iterative_seidel_method_seq::seidel_method_seq::rank(std::vector<double> A_, int rows, int cols){
+int khokhlov_a_iterative_seidel_method_seq::seidel_method_seq::rank(std::vector<double> A_, int rows, int cols) {
   int rank = 0;
-    for (int i = 0; i < std::min(rows, cols); ++i) {
-      int maxRow = i;
-        for (int k = i + 1; k < rows; ++k) {
-          if (std::abs(A_[k * rows + i]) > std::abs(A_[maxRow * rows +i])) {
-            maxRow = k;
-          }
-        }
-        if (std::abs(A_[maxRow * rows + i]) < 1e-9) {
-          continue;
-        }
-        std::swap(A_[i], A_[maxRow]);
-        for (int j = i + 1; j < rows; ++j) {
-          double factor = A_[j * rows + i] / A_[i * rows + i];
-          for (int k = i; k < cols; ++k) {
-            A_[j * rows + k] -= factor * A_[i * rows + k];
-          }
-        }
-      rank++;
+  for (int i = 0; i < std::min(rows, cols); ++i) {
+    int maxRow = i;
+    for (int k = i + 1; k < rows; ++k) {
+      if (std::abs(A_[k * rows + i]) > std::abs(A_[maxRow * rows + i])) {
+        maxRow = k;
+      }
     }
+    if (std::abs(A_[maxRow * rows + i]) < 1e-9) {
+      continue;
+    }
+    std::swap(A_[i], A_[maxRow]);
+    for (int j = i + 1; j < rows; ++j) {
+      double factor = A_[j * rows + i] / A_[i * rows + i];
+      for (int k = i; k < cols; ++k) {
+        A_[j * rows + k] -= factor * A_[i * rows + k];
+      }
+    }
+    rank++;
+  }
   return rank;
 }
