@@ -29,7 +29,9 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq::pre_processing()
 bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq::validation() {
   internal_order_test();
   int N = taskData->inputs_count[0];
-  if (N == 0) return false;
+  int iter = taskData->inputs_count[1];
+  if (N < 1) return false;
+  if (iter < 1) return false;
   std::vector<double> A_ = std::vector<double>(N * N);
   auto* tmp = reinterpret_cast<double*>(taskData->inputs[0]);
   std::copy(tmp, tmp + N * N, A_.begin());
@@ -46,8 +48,7 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq::validation() {
     }
   int rankA = rank(A_, N, N);
   int rankAb = rank(A_, N, N + 1);
-  return (taskData->inputs_count[0] > 0 && taskData->inputs_count[1] > 0 && taskData->inputs_count[3] >= 0 &&
-          rankA == rankAb);
+  return (taskData->inputs_count[3] >= 0 && rankA == rankAb);
 }
 
 bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_seq::run() {
@@ -117,7 +118,9 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::validation() {
   internal_order_test();
   if (world.rank() == 0) {
     int N = taskData->inputs_count[0];
-    if (N == 0) return false;
+    int iter = taskData->inputs_count[1];
+    if (N < 1) return false;
+    if (iter < 1) return false;
     std::vector<double> A_ = std::vector<double>(N * N);
     auto* tmp = reinterpret_cast<double*>(taskData->inputs[0]);
     std::copy(tmp, tmp + N * N, A_.begin());
@@ -134,8 +137,7 @@ bool khokhlov_a_iterative_seidel_method_mpi::seidel_method_mpi::validation() {
       }
     int rankA = rank(A_, N, N);
     int rankAb = rank(A_, N, N + 1);
-    return (taskData->inputs_count[0] > 0 && taskData->inputs_count[1] > 0 && taskData->inputs_count[3] >= 0 &&
-            rankA == rankAb);
+    return (taskData->inputs_count[3] >= 0 && rankA == rankAb);
   }
   return true;
 }
