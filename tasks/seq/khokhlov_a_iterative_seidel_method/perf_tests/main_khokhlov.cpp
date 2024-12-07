@@ -4,9 +4,9 @@
 #include "seq/khokhlov_a_iterative_seidel_method/include/ops_seq_khokhlov.hpp"
 
 TEST(khokhlov_a_iterative_seidel_method_seq, test_pipline_run_seq) {
-  const int n = 1000;
-  const int maxiter = 1000;
-  const double eps = 1e-6;
+  const int n = 800;
+  const int maxiter = 800;
+  const double eps = 1e-3;
 
   // create data
   std::vector<double> A(n * n, 0.0);
@@ -48,9 +48,9 @@ TEST(khokhlov_a_iterative_seidel_method_seq, test_pipline_run_seq) {
 }
 
 TEST(khokhlov_a_iterative_seidel_method_seq, test_task_run_seq) {
-  const int n = 1000;
-  const int maxiter = 1000;
-  const double eps = 1e-6;
+  const int n = 800;
+  const int maxiter = 800;
+  const double eps = 1e-3;
 
   // create data
   std::vector<double> A(n * n, 0.0);

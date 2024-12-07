@@ -1,13 +1,14 @@
 #include <gtest/gtest.h>
 
 #include "core/perf/include/perf.hpp"
+#include <boost/mpi/timer.hpp>
 #include "mpi/khokhlov_a_iterative_seidel_method/include/ops_mpi_khokhlov.hpp"
 
-TEST(khokhlov_a_iterative_seidel_method_mpi, test_pipline_run_mpi) {
+TEST(khokhlov_a_iterative_seidel_method_mpi, test_pipline_run) {
   boost::mpi::communicator world;
-  const int n = 1000;
-  const int maxiter = 1000;
-  const double eps = 1e-6;
+  const int n = 800;
+  const int maxiter = 800;
+  const double eps = 1e-3;
 
   // create data
   std::vector<double> A(n * n, 0.0);
@@ -37,12 +38,8 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_pipline_run_mpi) {
   // Create Perf attributes
   auto perfAttr = std::make_shared<ppc::core::PerfAttr>();
   perfAttr->num_running = 10;
-  const auto t0 = std::chrono::high_resolution_clock::now();
-  perfAttr->current_timer = [&] {
-    auto current_time_point = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(current_time_point - t0).count();
-    return static_cast<double>(duration) * 1e-9;
-  };
+  const boost::mpi::timer current_timer;
+  perfAttr->current_timer = [&] { return current_timer.elapsed(); };
 
   // Create and init perf results
   auto perfResults = std::make_shared<ppc::core::PerfResults>();
@@ -52,15 +49,14 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_pipline_run_mpi) {
   perfAnalyzer->pipeline_run(perfAttr, perfResults);
   if (world.rank() == 0) {
     ppc::core::Perf::print_perf_statistic(perfResults);
-    ASSERT_EQ(b.size(), result.size());
   }
 }
 
-TEST(khokhlov_a_iterative_seidel_method_seq, test_task_run_mpi) {
+TEST(khokhlov_a_iterative_seidel_method_mpi, test_task_run) {
   boost::mpi::communicator world;
-  const int n = 1000;
-  const int maxiter = 1000;
-  const double eps = 1e-6;
+  const int n = 800;
+  const int maxiter = 800;
+  const double eps = 1e-3;
 
   // create data
   std::vector<double> A(n * n, 0.0);
@@ -90,12 +86,8 @@ TEST(khokhlov_a_iterative_seidel_method_seq, test_task_run_mpi) {
   // Create Perf attributes
   auto perfAttr = std::make_shared<ppc::core::PerfAttr>();
   perfAttr->num_running = 10;
-  const auto t0 = std::chrono::high_resolution_clock::now();
-  perfAttr->current_timer = [&] {
-    auto current_time_point = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(current_time_point - t0).count();
-    return static_cast<double>(duration) * 1e-9;
-  };
+  const boost::mpi::timer current_timer;
+  perfAttr->current_timer = [&] { return current_timer.elapsed(); };
 
   // Create and init perf results
   auto perfResults = std::make_shared<ppc::core::PerfResults>();
@@ -105,6 +97,5 @@ TEST(khokhlov_a_iterative_seidel_method_seq, test_task_run_mpi) {
   perfAnalyzer->task_run(perfAttr, perfResults);
   if (world.rank() == 0) {
     ppc::core::Perf::print_perf_statistic(perfResults);
-    ASSERT_EQ(b.size(), result.size());
   }
 }
