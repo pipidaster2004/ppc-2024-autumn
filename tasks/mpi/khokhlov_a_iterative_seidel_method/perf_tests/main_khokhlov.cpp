@@ -5,6 +5,22 @@
 #include "core/perf/include/perf.hpp"
 #include "mpi/khokhlov_a_iterative_seidel_method/include/ops_mpi_khokhlov.hpp"
 
+void getRandomSLAU(std::vector<double> &A, std::vector<double> &b, int N) {
+  std::random_device dev;
+  std::mt19937 gen(dev());
+  for (int i = 0; i < N; ++i) {
+    double rowSum = 0.0;
+    for (int j = 0; j < N; ++j) {
+      if (i != j) {
+        A[i * N + j] = rand() % 10 - 5;
+        rowSum += std::abs(A[i * N + j]);
+      }
+    }
+    A[i * N + i] = rowSum + (rand() % 5 + 1);
+    b[i] = rand() % 20 - 10;
+  }
+}
+
 TEST(khokhlov_a_iterative_seidel_method_mpi, test_pipline_run) {
   boost::mpi::communicator world;
   const int n = 800;
@@ -15,7 +31,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_pipline_run) {
   std::vector<double> A(n * n, 0.0);
   std::vector<double> b(n, 0.0);
   std::vector<double> result(n, 0.0);
-  khokhlov_a_iterative_seidel_method_mpi::getRandomSLAU(A, b, n);
+  getRandomSLAU(A, b, n);
 
   // create task data
   std::shared_ptr<ppc::core::TaskData> taskdataMpi = std::make_shared<ppc::core::TaskData>();
@@ -63,7 +79,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_task_run) {
   std::vector<double> A(n * n, 0.0);
   std::vector<double> b(n, 0.0);
   std::vector<double> result(n, 0.0);
-  khokhlov_a_iterative_seidel_method_mpi::getRandomSLAU(A, b, n);
+  getRandomSLAU(A, b, n);
 
   // create task data
   std::shared_ptr<ppc::core::TaskData> taskdataMpi = std::make_shared<ppc::core::TaskData>();

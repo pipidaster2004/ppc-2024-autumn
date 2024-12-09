@@ -8,8 +8,6 @@
 
 namespace khokhlov_a_iterative_seidel_method_seq {
 
-void getRandomSLAU(std::vector<double>& A, std::vector<double>& b, int N);
-
 class seidel_method_seq : public ppc::core::Task {
  public:
   explicit seidel_method_seq(std::shared_ptr<ppc::core::TaskData> taskData_) : Task(std::move(taskData_)) {}

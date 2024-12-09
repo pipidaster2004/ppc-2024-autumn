@@ -9,7 +9,6 @@
 #include "core/task/include/task.hpp"
 
 namespace khokhlov_a_iterative_seidel_method_mpi {
-void getRandomSLAU(std::vector<double>& A, std::vector<double>& b, int N);
 
 class seidel_method_seq : public ppc::core::Task {
  public:

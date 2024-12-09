@@ -6,6 +6,22 @@
 #include "mpi/khokhlov_a_iterative_seidel_method/include/ops_mpi_khokhlov.hpp"
 #include "mpi/khokhlov_a_iterative_seidel_method/src/ops_mpi_khokhlov.cpp"
 
+void getRandomSLAU(std::vector<double> &A, std::vector<double> &b, int N) {
+  std::random_device dev;
+  std::mt19937 gen(dev());
+  for (int i = 0; i < N; ++i) {
+    double rowSum = 0.0;
+    for (int j = 0; j < N; ++j) {
+      if (i != j) {
+        A[i * N + j] = rand() % 10 - 5;
+        rowSum += std::abs(A[i * N + j]);
+      }
+    }
+    A[i * N + i] = rowSum + (rand() % 5 + 1);
+    b[i] = rand() % 20 - 10;
+  }
+}
+
 TEST(khokhlov_a_iterative_seidel_method_mpi, test_empty_matrix) {
   boost::mpi::communicator world;
   const int n = 0;
@@ -108,7 +124,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix_10x10) {
   std::vector<double> b(n, 1.0);
   std::vector<double> result(n, 1.0);
 
-  khokhlov_a_iterative_seidel_method_mpi::getRandomSLAU(A, b, n);
+  getRandomSLAU(A, b, n);
 
   // Create TaskData
   std::shared_ptr<ppc::core::TaskData> taskdataMpi = std::make_shared<ppc::core::TaskData>();
@@ -164,7 +180,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix_20x20) {
   std::vector<double> b(n, 1.0);
   std::vector<double> result(n, 1.0);
 
-  khokhlov_a_iterative_seidel_method_mpi::getRandomSLAU(A, b, n);
+  getRandomSLAU(A, b, n);
 
   // Create TaskData
   std::shared_ptr<ppc::core::TaskData> taskdataMpi = std::make_shared<ppc::core::TaskData>();
@@ -220,7 +236,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix_50x50) {
   std::vector<double> b(n, 1.0);
   std::vector<double> result(n, 1.0);
 
-  khokhlov_a_iterative_seidel_method_mpi::getRandomSLAU(A, b, n);
+  getRandomSLAU(A, b, n);
 
   // Create TaskData
   std::shared_ptr<ppc::core::TaskData> taskdataMpi = std::make_shared<ppc::core::TaskData>();
@@ -276,7 +292,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix100x100) {
   std::vector<double> b(n, 1.0);
   std::vector<double> result(n, 1.0);
 
-  khokhlov_a_iterative_seidel_method_mpi::getRandomSLAU(A, b, n);
+  getRandomSLAU(A, b, n);
 
   // Create TaskData
   std::shared_ptr<ppc::core::TaskData> taskdataMpi = std::make_shared<ppc::core::TaskData>();

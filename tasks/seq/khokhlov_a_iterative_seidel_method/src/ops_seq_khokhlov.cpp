@@ -89,22 +89,6 @@ bool khokhlov_a_iterative_seidel_method_seq::seidel_method_seq::post_processing(
   return true;
 }
 
-void khokhlov_a_iterative_seidel_method_seq::getRandomSLAU(std::vector<double>& A, std::vector<double>& b, int N) {
-  std::random_device dev;
-  std::mt19937 gen(dev());
-  for (int i = 0; i < N; ++i) {
-    double rowSum = 0.0;
-    for (int j = 0; j < N; ++j) {
-      if (i != j) {
-        A[i * N + j] = rand() % 10 - 5;
-        rowSum += std::abs(A[i * N + j]);
-      }
-    }
-    A[i * N + i] = rowSum + (rand() % 5 + 1);
-    b[i] = rand() % 20 - 10;
-  }
-}
-
 int khokhlov_a_iterative_seidel_method_seq::seidel_method_seq::rank(std::vector<double> A_, int rows, int cols) {
   int rank = 0;
   for (int i = 0; i < std::min(rows, cols); ++i) {
