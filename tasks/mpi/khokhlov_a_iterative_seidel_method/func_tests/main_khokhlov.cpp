@@ -220,7 +220,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix_20x20) {
     seq_task.run();
     seq_task.post_processing();
     for (int i = 0; i < n; i++) {
-      ASSERT_NEAR(result[i], result_seq[i], 5*1e-1);
+      ASSERT_NEAR(result[i], result_seq[i], 5 * 1e-1);
     }
   }
 }
@@ -276,7 +276,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix_50x50) {
     seq_task.run();
     seq_task.post_processing();
     for (int i = 0; i < n; i++) {
-      ASSERT_NEAR(result[i], result_seq[i], 5*1e-1);
+      ASSERT_NEAR(result[i], result_seq[i], 5 * 1e-1);
     }
   }
 }
@@ -332,7 +332,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix100x100) {
     seq_task.run();
     seq_task.post_processing();
     for (int i = 0; i < n; i++) {
-      ASSERT_NEAR(result[i], result_seq[i], 5*1e-1);
+      ASSERT_NEAR(result[i], result_seq[i], 5 * 1e-1);
     }
   }
 }
