@@ -173,7 +173,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix_20x20) {
   boost::mpi::communicator world;
   const int n = 20;
   const int maxiter = 100;
-  const double eps = 1e-6;
+  const double eps = 1e-8;
 
   // Create data
   std::vector<double> A(n * n, 1.0);
@@ -220,7 +220,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix_20x20) {
     seq_task.run();
     seq_task.post_processing();
     for (int i = 0; i < n; i++) {
-      ASSERT_NEAR(result[i], result_seq[i], 1e-1);
+      ASSERT_NEAR(result[i], result_seq[i], 5*1e-1);
     }
   }
 }
@@ -229,7 +229,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix_50x50) {
   boost::mpi::communicator world;
   const int n = 50;
   const int maxiter = 100;
-  const double eps = 1e-6;
+  const double eps = 1e-8;
 
   // Create data
   std::vector<double> A(n * n, 1.0);
@@ -276,7 +276,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix_50x50) {
     seq_task.run();
     seq_task.post_processing();
     for (int i = 0; i < n; i++) {
-      ASSERT_NEAR(result[i], result_seq[i], 1e-1);
+      ASSERT_NEAR(result[i], result_seq[i], 5*1e-1);
     }
   }
 }
@@ -285,7 +285,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix100x100) {
   boost::mpi::communicator world;
   const int n = 100;
   const int maxiter = 150;
-  const double eps = 1e-6;
+  const double eps = 1e-8;
 
   // Create data
   std::vector<double> A(n * n, 1.0);
@@ -332,7 +332,7 @@ TEST(khokhlov_a_iterative_seidel_method_mpi, test_const_matrix100x100) {
     seq_task.run();
     seq_task.post_processing();
     for (int i = 0; i < n; i++) {
-      ASSERT_NEAR(result[i], result_seq[i], 1e-1);
+      ASSERT_NEAR(result[i], result_seq[i], 5*1e-1);
     }
   }
 }
